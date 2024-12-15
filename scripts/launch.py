@@ -135,7 +135,6 @@ print(f"🔧 WebUI: \033[34m{UI} \033[0m")
 # Launching the tunnel
 with tunnel:
     os.chdir(WEBUI)
-    commandline_arguments = ''  # Ensure this variable is defined
     commandline_arguments += f' --port={tunnel_port}'
 
     if ENV_NAME == "Kaggle" and UI != 'ComfyUI':
