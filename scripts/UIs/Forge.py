@@ -30,8 +30,8 @@ async def _download_file(url, directory, filename):
     file_path = os.path.join(directory, filename)
     process = await asyncio.create_subprocess_shell(
         f'curl -sLo {file_path} {url}',
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
     )
     await process.communicate()
 
@@ -64,6 +64,7 @@ async def download_configuration():
         
         ## OTHER | ON
         "https://github.com/gutris1/sd-image-info Image-Info",
+        "https://github.com/gutris1/sd-encrypt-image Encrypt-Image",
 
         ## OTHER | OFF
         # "https://github.com/Bing-su/adetailer Adetailer",
@@ -74,7 +75,6 @@ async def download_configuration():
         # "https://github.com/Mikubill/sd-webui-controlnet ControlNet",
         # "https://github.com/zanllp/sd-webui-infinite-image-browsing Infinite-Image-Browsing",
         ## "https://github.com/hako-mikan/sd-webui-regional-prompter Regional-Prompter",
-        # "https://github.com/viyiviyi/sd-encrypt-image Encrypt-Image",
         # "https://github.com/gutris1/sd-image-info Image-Info",
         # "https://github.com/gutris1/sd-hub SD-Hub",
         # "https://github.com/ilian6806/stable-diffusion-webui-state State",
@@ -88,7 +88,11 @@ async def download_configuration():
 
     tasks = []
     for command in extensions_list:
-        tasks.append(asyncio.create_subprocess_shell(f'git clone --depth 1 --recursive {command}'))
+        tasks.append(asyncio.create_subprocess_shell(
+            f'git clone --depth 1 --recursive {command}',
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ))
     
     await asyncio.gather(*tasks)
 

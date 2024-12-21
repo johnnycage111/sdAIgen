@@ -9,10 +9,11 @@ from pathlib import Path
 import subprocess
 import requests
 import logging
-import os
-import re
 import time
 import json
+import os
+import re
+
 
 # Constants
 HOME = Path.home()
@@ -22,6 +23,10 @@ SETTINGS_PATH = SCR_PATH / 'settings.json'
 UI = read_json(SETTINGS_PATH, 'WEBUI.current')
 WEBUI = read_json(SETTINGS_PATH, 'WEBUI.webui_path')
 ENV_NAME = read_json(SETTINGS_PATH, 'ENVIRONMENT.env_name')
+VENV = read_json(SETTINGS_PATH, 'ENVIRONMENT.venv_path')
+
+# USER VENV
+py = Path(VENV) / 'bin/python3'
 
 def load_settings(path):
     """Load settings from a JSON file."""
@@ -111,6 +116,9 @@ if not public_ipv4:
 tunnel_port = 8188 if UI == 'ComfyUI' else 7860
 tunnel = Tunnel(tunnel_port)
 tunnel.logger.setLevel(logging.DEBUG)
+
+#environ
+# os.environ['PATH'] = f'{VENV}/bin:' + os.environ['PATH']
 os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Setup tunnels
@@ -136,18 +144,25 @@ print(f"🔧 WebUI: \033[34m{UI} \033[0m")
 with tunnel:
     os.chdir(WEBUI)
     commandline_arguments += f' --port={tunnel_port}'
-
+    
+    # Default args append
+    if UI != 'ComfyUI':
+        commandline_arguments += ' --disable-console-progressbars --theme dark'
+    
+    # NSFW filter for Kaggle
     if ENV_NAME == "Kaggle" and UI != 'ComfyUI':
         commandline_arguments += f' --encrypt-pass={tunnel_port} --api'
 
+    ## Launch
     if UI != 'ComfyUI':
-        get_ipython().system(f'python launch.py {commandline_arguments}')
+        get_ipython().system(f'{py} launch.py {commandline_arguments}')
     else:
-        get_ipython().system('python install-deps.py')
+        if check_custom_nodes_deps:
+            get_ipython().system('{py} install-deps.py')
         print("Installing dependencies for ComfyUI from requirements.txt...")
         subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         clear_output(wait=True)
-        get_ipython().system(f'python main.py {commandline_arguments}')
+        get_ipython().system(f'{py} main.py {commandline_arguments}')
 
 # Print session duration
 timer = float(open(f'{WEBUI}/static/timer.txt', 'r').read())
