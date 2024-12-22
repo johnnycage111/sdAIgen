@@ -1,5 +1,5 @@
 <div align="center">
-<img width="512px" height="auto" src="https://raw.githubusercontent.com/anxety-solo/sdAIgen/main/.Docs/Imgs/sdaigen.png"/></br>
+<img width="512px" height="auto" src="https://raw.githubusercontent.com/anxety-solo/sdAIgen/dev/.Docs/Imgs/sdaigen.png"/></br>
 <h1>~ ANXETY | Stable Diffusion WebUI | NoteBook V2 ~</h1>
 	
 [English](README.md) | Русский
@@ -57,6 +57,10 @@
 - [UltimateSDUpscale](https://github.com/ssitu/ComfyUI_UltimateSDUpscale)
 
 </details>
+
+## 🚧 FAQ:
+- [ ] Add basic...
+- [Old information](https://rentry.co/anxety-sdw-faq-ru)
 
 <div align="center">
 	<h6>Некоторые скрипты взяты у <a href="https://github.com/gutris1">gutris1</a>.</h6>
