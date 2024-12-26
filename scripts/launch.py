@@ -142,7 +142,7 @@ launcher = 'main.py' if UI == 'ComfyUI' else 'launch.py'
 password = 'vo9fdxgc0zkvghqwzrlz6rk2o00h5sc7'
 
 # Setup pinggy timer
-get_ipython().system(f'echo -n {int(time.time())+(3600+15)} > {WEBUI}/static/timer-pinggy.txt')
+get_ipython().system(f'echo -n {int(time.time())+(3600+20)} > {WEBUI}/static/timer-pinggy.txt')
 
 with tunnel:
     os.chdir(WEBUI)
@@ -150,7 +150,7 @@ with tunnel:
     
     # Default args append
     if UI != 'ComfyUI':
-        commandline_arguments += ' --disable-console-progressbars --theme dark'
+        commandline_arguments += ' --enable-insecure-extension-access --disable-console-progressbars --theme dark'
         # NSFW filter for Kaggle
         if ENV_NAME == "Kaggle":
             commandline_arguments += f' --encrypt-pass={password} --api'
