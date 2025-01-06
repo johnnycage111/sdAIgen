@@ -117,7 +117,8 @@ custom_download_header_popup = factory.create_html('''
 <div class="header" style="cursor: pointer;" onclick="toggleContainer()">Кастомная Загрузка</div>
 <div class="info" id="info_dl">INFO</div>
 <div class="popup">
-    Разделите несколько URL-адресов запятой/пробелом. Для <span class="file_name">пользовательского имени</span> файла/расширения укажите его через <span class="braces">[]</span> после URL без пробелов.
+    Разделите несколько URL-адресов запятой/пробелом.
+    Для <span class="file_name">пользовательского имени</span> файла/расширения укажите его через <span class="braces">[]</span> после URL без пробелов.
     <span class="required">Для файлов обязательно укажите</span> - <span class="extension">Расширение Файла.</span>
     <div class="sample">
         <span class="sample_label">Пример для Файла:</span>
@@ -134,6 +135,7 @@ Vae_url_widget = factory.create_text('Vae:')
 LoRA_url_widget = factory.create_text('LoRa:')
 Embedding_url_widget = factory.create_text('Embedding:')
 Extensions_url_widget = factory.create_text('Extensions:')
+ADetailer_url_widget = factory.create_text('ADetailer:')
 custom_file_urls_widget = factory.create_text('Файл (txt):')
 
 # --- Save Button ---
@@ -156,6 +158,7 @@ custom_download_widgets = [
     LoRA_url_widget,
     Embedding_url_widget,
     Extensions_url_widget,
+    ADetailer_url_widget,
     custom_file_urls_widget
 ]
 
@@ -218,7 +221,7 @@ SETTINGS_KEYS = [
       'latest_webui', 'latest_extensions', 'check_custom_nodes_deps', 'change_webui', 'detailed_download',
       'controlnet', 'controlnet_num', 'commit_hash',
       'civitai_token', 'huggingface_token', 'zrok_token', 'commandline_arguments',
-      'Model_url', 'Vae_url', 'LoRA_url', 'Embedding_url', 'Extensions_url', 'custom_file_urls'
+      'Model_url', 'Vae_url', 'LoRA_url', 'Embedding_url', 'Extensions_url', 'ADetailer_url', 'custom_file_urls'
 ]
 
 def save_settings():
