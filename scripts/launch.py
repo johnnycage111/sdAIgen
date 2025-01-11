@@ -11,6 +11,7 @@ import requests
 import logging
 import time
 import json
+import yaml
 import os
 import re
 
@@ -65,19 +66,46 @@ def update_config_paths(config_path, paths_to_check):
         for key, expected_value in paths_to_check.items():
             if key in config_data and config_data[key] != expected_value:
                 sed_command = f"sed -i 's|\"{key}\": \".*\"|\"{key}\": \"{expected_value}\"|' {config_path}"
-                os.system(sed_command)
+                get_ipython().system(sed_command)
+                
+## === Tunnel Functions ===
+def _zrok_enable(token):
+    enable = f'zrok enable {token} &> /dev/null'
+    disable = 'zrok disable &> /dev/null'
+    zrok_env = HOME / '.zrok/environment.json'
+
+    if zrok_env.exists():
+        with open(zrok_env, 'r') as f:
+            current_token = json.load(f).get('zrok_token')
+        if current_token != token:
+            get_ipython().system(disable)
+            get_ipython().system(enable)
+    else:
+        get_ipython().system(enable)
+
+def _ngrok_auth(token):
+    auth = f'ngrok config add-authtoken {token}'
+    yml = HOME / '.config/ngrok/ngrok.yml'
+
+    if yml.exists():
+        with open(yml, 'r') as f:
+            current_token = yaml.safe_load(f).get('agent', {}).get('authtoken')
+        if current_token != token:
+            get_ipython().system(auth)
+    else:
+        get_ipython().system(auth)
 
 def setup_tunnels(tunnel_port, public_ipv4):
     """Setup tunneling commands based on available packages and configurations."""
     tunnels = [
         {
             "command": f"cl tunnel --url localhost:{tunnel_port}",
-            "name": "cl",
+            "name": "Cloudflared",
             "pattern": re.compile(r"[\w-]+\.trycloudflare\.com")
         },
         {
             "command": f"ssh -o StrictHostKeyChecking=no -p 80 -R0:localhost:{tunnel_port} a.pinggy.io",
-            "name": "pinggy",
+            "name": "Pinggy",
             "pattern": re.compile(r"[\w-]+\.a\.free\.pinggy\.link")
         }
     ]
@@ -85,21 +113,31 @@ def setup_tunnels(tunnel_port, public_ipv4):
     if is_package_installed('localtunnel'):
         tunnels.append({
             "command": f"lt --port {tunnel_port}",
-            "name": "lt",
+            "name": "Localtunnel",
             "pattern": re.compile(r"[\w-]+\.loca\.lt"),
             "note": f"Password : \033[32m{public_ipv4}\033[0m rerun cell if 404 error."
         })
 
     if zrok_token:
-        os.system(f'zrok enable {zrok_token} &> /dev/null')
+        _zrok_enable(zrok_token)
         tunnels.append({
             "command": f"zrok share public http://localhost:{tunnel_port}/ --headless",
-            "name": "zrok",
+            "name": "Zrok",
             "pattern": re.compile(r"[\w-]+\.share\.zrok\.io")
+        })
+        
+    if ngrok_token:
+        _ngrok_auth(ngrok_token)
+        tunnels.append({
+            "command": f"ngrok http http://localhost:{tunnel_port} --log stdout",
+            "name": "Ngrok",
+            "pattern": re.compile(r"https://[\w-]+\.ngrok-free\.app")
         })
 
     return tunnels
 
+
+## === Main ===
 # Load settings
 settings = load_settings(SETTINGS_PATH)
 locals().update(settings)
@@ -113,18 +151,18 @@ if not public_ipv4:
     update_json(SETTINGS_PATH, "ENVIRONMENT.public_ip", public_ipv4)
 
 tunnel_port = 8188 if UI == 'ComfyUI' else 7860
-tunnel = Tunnel(tunnel_port)
-tunnel.logger.setLevel(logging.DEBUG)
+TunnelingService = Tunnel(tunnel_port)
+TunnelingService.logger.setLevel(logging.DEBUG)
 
-#environ
-# if f'{VENV}/bin' not in os.environ['PATH']:
-#     os.environ['PATH'] = f'{VENV}/bin:' + os.environ['PATH']
+# environ
+if f'{VENV}/bin' not in os.environ['PATH']:
+    os.environ['PATH'] = f'{VENV}/bin:' + os.environ['PATH']
 os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Setup tunnels
 tunnels = setup_tunnels(tunnel_port, public_ipv4)
 for tunnel_info in tunnels:
-    tunnel.add_tunnel(**tunnel_info)
+    TunnelingService.add_tunnel(**tunnel_info)
 
 clear_output()
 
@@ -145,7 +183,7 @@ password = 'vo9fdxgc0zkvghqwzrlz6rk2o00h5sc7'
 # Setup pinggy timer
 get_ipython().system(f'echo -n {int(time.time())+(3600+20)} > {WEBUI}/static/timer-pinggy.txt')
 
-with tunnel:
+with TunnelingService:
     os.chdir(WEBUI)
     commandline_arguments += f' --port={tunnel_port}'
     
@@ -157,20 +195,20 @@ with tunnel:
             commandline_arguments += f' --encrypt-pass={password} --api'
     
     ## Launch
-    if UI == 'ComfyUI':
-        if check_custom_nodes_deps:
-            get_ipython().system('{py} install-deps.py')
-        print("Installing dependencies for ComfyUI from requirements.txt...")
-        subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        clear_output(wait=True)
+    try:
+        if UI == 'ComfyUI':
+            if check_custom_nodes_deps:
+                get_ipython().system('{py} install-deps.py')
+            print("Installing dependencies for ComfyUI from requirements.txt...")
+            subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            clear_output(wait=True)
 
-    print(f"🔧 WebUI: \033[34m{UI} \033[0m")
-    get_ipython().system(f'{py} {launcher} {commandline_arguments}')
+        print(f"🔧 WebUI: \033[34m{UI} \033[0m")
+        get_ipython().system(f'{py} {launcher} {commandline_arguments}')
+    except KeyboardInterrupt:
+        pass
 
 # Print session duration
 timer = float(open(f'{WEBUI}/static/timer.txt', 'r').read())
 time_since_start = str(timedelta(seconds=time.time() - timer)).split('.')[0]
 print(f"\n⌚️ You have been conducting this session for - \033[33m{time_since_start}\033[0m")
-
-if zrok_token:
-    os.system('zrok disable &> /dev/null')

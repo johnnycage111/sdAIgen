@@ -148,7 +148,7 @@ class Tunnel:
         if not self._is_running:
             raise RuntimeError("Tunnel is not running")
 
-        self.logger.info(f"\n\033[32m💣 Tunnels:\033[0m \033[34m{self.get_tunnel_names()}\033[0m \033[31mKilled.\033[0m")
+        self.logger.info(f"\n\033[32m💣 Tunnels:\033[0m \033[34m{self.get_tunnel_names()}\033[0m -> \033[31mKilled.\033[0m")
         self.stop_event.set()
         self.terminate_processes()
         self.join_threads()
@@ -357,7 +357,7 @@ class Tunnel:
                 print(f"\033[32m 🔗 Tunnel \033[0m{name:<{tunnel_name_width}}  \033[32mURL: \033[0m{url} {note if note else ''}")
 
             # Print the footer
-            print("\n\033[32m+" + "=" * (width - 2) + "+\033[0m")
+            print("\n\033[32m+" + "=" * (width - 2) + "+\033[0m\n")
 
             if self.callback:
                 self.invoke_callback(self.callback, self.urls)

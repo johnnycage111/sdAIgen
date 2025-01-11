@@ -81,7 +81,8 @@ def setup_venv():
     # Create a virtual environment
     venv_commands = [
         f'python3 -m venv {VENV}',
-        f'{VENV}/bin/python3 -m pip install -q -U --force-reinstall pip'
+        f'{VENV}/bin/python3 -m pip install -q -U --force-reinstall pip',
+        f'{VENV}/bin/pip uninstall -qy ngrok pyngrok'
     ]
 
     for cmd in venv_commands:
@@ -101,8 +102,9 @@ if not read_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps'):
         "pv": "apt -y install pv",
         # tunnels
         "localtunnel": "npm install -g localtunnel",
-        "cl": "curl -s -Lo /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && chmod +x /usr/bin/cl",
-        "zrok": "curl -sLO https://github.com/openziti/zrok/releases/download/v0.4.32/zrok_0.4.32_linux_amd64.tar.gz && tar -xzf zrok_0.4.32_linux_amd64.tar.gz -C /usr/bin && rm -f zrok_0.4.32_linux_amd64.tar.gz"
+        "cloudflared": "curl -s -Lo /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && chmod +x /usr/bin/cl",
+        "zrok": "curl -sLO https://github.com/openziti/zrok/releases/download/v0.4.32/zrok_0.4.32_linux_amd64.tar.gz && tar -xzf zrok_0.4.32_linux_amd64.tar.gz -C /usr/bin && rm -f zrok_0.4.32_linux_amd64.tar.gz",
+        "ngrok": "curl -sLo ngrok.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz && tar -xzf ngrok.tgz && sudo mv ngrok /usr/bin/ngrok && sudo chmod +x /usr/bin/ngrok && rm -f ngrok.tgz" 
     }
 
     additional_libs = {
@@ -188,14 +190,14 @@ with capture.capture_output():
 
 ## Version switching
 if commit_hash:
-    print('⏳ Time Machine Activation...', end="")
+    print('🔄 Switching to the specified version...', end="")
     with capture.capture_output():
         get_ipython().run_line_magic('cd', '{WEBUI}')
         get_ipython().system('git config --global user.email "you@example.com"')
         get_ipython().system('git config --global user.name "Your Name"')
         get_ipython().system('git reset --hard {commit_hash}')
         get_ipython().system('git pull origin {commit_hash}')    # Get last changes in branch
-    print(f"\r⌛️ Time Machine activated! Current commit: \033[34m{commit_hash}\033[0m")
+    print(f"\r🔄 Switch complete! Current commit: \033[34m{commit_hash}\033[0m")
 
 
 # Get XL or 1.5 models list
