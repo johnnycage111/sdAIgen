@@ -49,7 +49,7 @@ def load_settings(path):
 settings = load_settings(SETTINGS_PATH)
 locals().update(settings)
 
-# ================ LIBRARIES V4 ================
+# ================ LIBRARIES | VENV ================
 def setup_venv():
     """The main function to customize the virtual environment."""
     header = "--header='User-Agent: Mozilla/5.0' --allow-overwrite=true"
@@ -58,15 +58,17 @@ def setup_venv():
     fn = Path(url).name
     
     command_venv = f'aria2c {header} {args} -d {HOME} -o {fn} {url}'
-    subprocess.run(command_venv, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(shlex.split(command_venv), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Installing dependencies
     install_commands = []
     if ENV_NAME == 'Google Colab':
-        install_commands = ["apt -y install python3.10-venv", "apt -y install lz4"]
+        install_commands = ["apt -y install python3.10-venv"]
     else:
-        install_commands = ["pip install ipywidgets jupyterlab_widgets --upgrade", "apt -y install lz4"]
+        install_commands = ["pip install ipywidgets jupyterlab_widgets --upgrade"]
         get_ipython().system('rm -f /usr/lib/python3.10/sitecustomize.py')
+
+    install_commands.extend(["apt -y install lz4 pv"])
     
     for cmd in install_commands:
         subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -76,13 +78,13 @@ def setup_venv():
     get_ipython().system(f'pv {fn} | lz4 -d | tar xf -')
     Path(fn).unlink()
 
-    get_ipython().system(f'rm -rf {VENV}/bin/pip* {VENV}/bin/python* {HOME}/{fn}')
+    get_ipython().system(f'rm -rf {VENV}/bin/pip* {VENV}/bin/python*')
 
     # Create a virtual environment
     venv_commands = [
         f'python3 -m venv {VENV}',
         f'{VENV}/bin/python3 -m pip install -q -U --force-reinstall pip',
-        f'{VENV}/bin/pip uninstall -qy ngrok pyngrok'
+        f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
     ]
 
     for cmd in venv_commands:
@@ -97,10 +99,10 @@ def install_packages(install_lib):
 
 if not read_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps'):
     install_lib = {
-        # libs
+        ## libs
         "aria2": "pip install aria2",
-        "pv": "apt -y install pv",
-        # tunnels
+        # "pv": "apt -y install pv",
+        ## tunnels
         "localtunnel": "npm install -g localtunnel",
         "cloudflared": "curl -s -Lo /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && chmod +x /usr/bin/cl",
         "zrok": "curl -sLO https://github.com/openziti/zrok/releases/download/v0.4.32/zrok_0.4.32_linux_amd64.tar.gz && tar -xzf zrok_0.4.32_linux_amd64.tar.gz -C /usr/bin && rm -f zrok_0.4.32_linux_amd64.tar.gz",
@@ -563,10 +565,6 @@ else:
 print("\r🏁 Скачивание Завершено!" + " "*15)
 
 
-# Cleaning shit after downloading...
-get_ipython().system('find {webui_path} -type d -name ".ipynb_checkpoints" -exec rm -r {{}} \\; >/dev/null 2>&1')
-
-
 ## Install of Custom extensions
 def _clone_repository(repo, repo_name, extension_dir):
     """Clones the repository to the specified directory."""
@@ -582,6 +580,7 @@ if extension_repo:
         for repo, repo_name in extension_repo:
             _clone_repository(repo, repo_name, extension_dir)
     print(f"\r📦 Установлено '{len(extension_repo)}' кастомных {extension_type}!")
+
 
 ## List Models and stuff
 get_ipython().run_line_magic('run', f'{SCRIPTS}/download-result.py')
