@@ -63,6 +63,15 @@ def setup_venv():
     # Installing dependencies
     install_commands = []
     if ENV_NAME == 'Google Colab':
+        # I agree with the author of the correction here ;3
+        for blyat in [
+            'sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python',
+            'sudo ln -sf /usr/bin/python3.10 /usr/bin/python3',
+            'sudo rm -rf /usr/local/lib/python3.10',
+            'sudo ln -sf /usr/local/lib/python3.11 /usr/local/lib/python3.10'
+        ]:
+            get_ipython().system(blyat)
+
         install_commands = ["apt -y install python3.10-venv"]
     else:
         install_commands = ["pip install ipywidgets jupyterlab_widgets --upgrade"]
