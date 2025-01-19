@@ -110,6 +110,7 @@ if not read_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps'):
     install_lib = {
         ## libs
         "aria2": "pip install aria2",
+        "gdown": "pip install gdown",
         # "pv": "apt -y install pv",
         ## tunnels
         "localtunnel": "npm install -g localtunnel",
