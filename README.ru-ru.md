@@ -33,7 +33,6 @@
 - [aspect-ratio-helper](https://github.com/thomasasfk/sd-webui-aspect-ratio-helper)
 - [canvas-zoom](https://github.com/richrobber2/canvas-zoom)
 - [CivitAi-Browser-plus](https://github.com/anxety-solo/sd-civitai-browser-plus) 
-- [Config-Presets](https://github.com/Zyin055/Config-Presets)
 - [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
 - [infinite-image-browsing](https://github.com/zanllp/sd-webui-infinite-image-browsing)
 - [regional-prompter](https://github.com/hako-mikan/sd-webui-regional-prompter)
@@ -59,7 +58,6 @@
 </details>
 
 ## 🚧 FAQ:
-- [ ] Add basic...
 - [Old information](https://rentry.co/anxety-sdw-faq-ru)
 
 <div align="center">

@@ -1,13 +1,19 @@
 # ~ ComfyUI.py | by ANXETY ~
 
 from json_utils import read_json, update_json   # JSON (main)
+from Manager import m_download, m_clone         # Every Download | Clone
 
 from IPython.display import clear_output
 from IPython.utils import capture
+from IPython import get_ipython
 from pathlib import Path
 import subprocess
 import asyncio
 import os
+
+
+CD = os.chdir
+ipySys = get_ipython().system
 
 # Constants
 UI = 'ComfyUI'
@@ -21,7 +27,8 @@ REPO_URL = f"https://huggingface.co/NagisaNao/ANXETY/resolve/main/{UI}.zip"
 BRANCH = read_json(SETTINGS_PATH, 'ENVIRONMENT.branch')
 EXTS = read_json(SETTINGS_PATH, 'WEBUI.extension_dir')
 
-os.chdir(HOME)
+CD(HOME)
+
 
 # ==================== WEB UI OPERATIONS ====================
 
@@ -61,8 +68,7 @@ async def download_configuration():
         "https://github.com/ltdrdata/ComfyUI-Manager",
         "https://github.com/pythongosssss/ComfyUI-Custom-Scripts"
     ]
-    os.makedirs(EXTS, exist_ok=True)
-    os.chdir(EXTS)
+    CD(EXTS)
 
     tasks = []
     for command in extensions_list:
@@ -75,10 +81,10 @@ async def download_configuration():
     await asyncio.gather(*tasks)
 
 def unpack_webui():
-    zip_path = f"{SCR_PATH}/{UI}.zip"
-    get_ipython().system(f'aria2c --console-log-level=error -c -x 16 -s 16 -k 1M {REPO_URL} -d {SCR_PATH} -o {UI}.zip')
-    get_ipython().system(f'unzip -q -o {zip_path} -d {WEBUI}')
-    get_ipython().system(f'rm -rf {zip_path}')
+    zip_path = f"{HOME}/{UI}.zip"
+    m_download(f'{REPO_URL} {HOME} {UI}.zip')
+    ipySys(f'unzip -q -o {zip_path} -d {WEBUI}')
+    ipySys(f'rm -rf {zip_path}')
 
 # ==================== MAIN CODE ====================
 

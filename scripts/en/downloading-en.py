@@ -3,10 +3,12 @@
 from json_utils import read_json, save_json, update_json    # JSON (main)
 from webui_utils import handle_setup_timer                  # WEBUI
 from CivitaiAPI import CivitAiAPI                           # CivitAI API
+from Manager import m_download                              # Every Download
 
 from IPython.display import clear_output
 from IPython.utils import capture
 from urllib.parse import urlparse
+from IPython import get_ipython
 from datetime import timedelta
 from pathlib import Path
 import subprocess
@@ -19,19 +21,110 @@ import sys
 import re
 import os
 
+
+CD = os.chdir
+ipySys = get_ipython().system
+ipyRun = get_ipython().run_line_magic
+
 # Constants
 HOME = Path.home()
+VENV = HOME / 'venv'
 SCR_PATH = Path(HOME / 'ANXETY')
+SCRIPTS = SCR_PATH / 'scripts'
 SETTINGS_PATH = SCR_PATH / 'settings.json'
+
 LANG = read_json(SETTINGS_PATH, 'ENVIRONMENT.lang')
 ENV_NAME = read_json(SETTINGS_PATH, 'ENVIRONMENT.env_name')
-VENV = HOME / 'venv'
-
 UI = read_json(SETTINGS_PATH, 'WEBUI.current')
 WEBUI = read_json(SETTINGS_PATH, 'WEBUI.webui_path')
 
-SCRIPTS = SCR_PATH / 'scripts'
 
+# ================ LIBRARIES | VENV ================
+
+def run_command(command, suppress_output=True):
+    """Run a shell command and optionally suppress output."""
+    subprocess.run(shlex.split(command), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def install_dependencies(commands):
+    """Run a list of installation commands."""
+    for cmd in commands:
+        run_command(cmd)
+
+def setup_venv():
+    """Customize the virtual environment."""
+    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/venv-torch251-cu121-Kfac.tar.lz4"
+    fn = Path(url).name
+
+    m_download(f'{url} {HOME} {fn}')
+
+    # Install dependencies based on environment
+    install_commands = []
+    if ENV_NAME == 'Google Colab':
+        install_commands.append("apt -y install python3.10-venv")
+    else:
+        install_commands.extend([
+            "pip install ipywidgets jupyterlab_widgets --upgrade",
+            "rm -f /usr/lib/python3.10/sitecustomize.py"
+        ])
+
+    install_commands.append("apt -y install lz4 pv")
+    install_dependencies(install_commands)
+
+    # Unpack and clean
+    CD(HOME)
+    ipySys(f'pv {fn} | lz4 -d | tar xf -')
+    Path(fn).unlink()
+    ipySys(f'rm -rf {VENV}/bin/pip* {VENV}/bin/python*')
+
+    # Create a virtual environment
+    python_command = 'python3.10' if ENV_NAME == 'Google Colab' else 'python3'
+    venv_commands = [
+        f'{python_command} -m venv {VENV}',
+        f'{VENV}/bin/python3 -m pip install -U --force-reinstall pip',
+        f'{VENV}/bin/python3 -m pip install ipykernel',
+        f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
+    ]
+    if UI in ['Forge', 'ComfyUI']:
+        venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
+
+    install_dependencies(venv_commands)
+
+def install_packages(install_lib):
+    """Install packages from the provided library dictionary."""
+    for index, (package, install_cmd) in enumerate(install_lib.items(), start=1):
+        print(f"\r[{index}/{len(install_lib)}] \033[32m>>\033[0m Installing \033[33m{package}\033[0m..." + " " * 35, end='')
+        result = subprocess.run(install_cmd, shell=True, capture_output=True)
+        if result.returncode != 0:
+            print(f"\n\033[31mError installing {package}: {result.stderr.decode()}\033[0m")
+
+# Check and install dependencies
+if not read_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps'):
+    install_lib = {
+        ## Libs
+        "aria2": "pip install aria2",
+        "gdown": "pip install gdown",
+        ## Tunnels
+        "localtunnel": "npm install -g localtunnel",
+        "cloudflared": "wget -qO /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64; chmod +x /usr/bin/cl",
+        "zrok": "wget -qO zrok_0.4.44_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v0.4.44/zrok_0.4.44_linux_amd64.tar.gz; tar -xzf zrok_0.4.44_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_0.4.44_linux_amd64.tar.gz",
+        "ngrok": "wget -qO ngrok-v3-stable-linux-amd64.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz; tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/bin; rm -f ngrok-v3-stable-linux-amd64.tgz"
+    }
+
+    print("💿 Installing the libraries will take a bit of time.")
+    install_packages(install_lib)
+    clear_output()
+    update_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True)
+
+# Check and setup virtual environment
+if not VENV.exists(): 
+    print("♻️ Installing VENV, this will take some time...")
+    setup_venv()
+    clear_output()
+
+# print("🍪 The libraries and VENV are installed!")
+# time.sleep(2)
+# clear_output()
+ 
 # ============ loading settings V5 =============
 def load_settings(path):
     """Load settings from a JSON file."""
@@ -49,106 +142,6 @@ def load_settings(path):
 settings = load_settings(SETTINGS_PATH)
 locals().update(settings)
 
-# ================ LIBRARIES | VENV ================
-def setup_venv():
-    """The main function to customize the virtual environment."""
-    header = "--header='User-Agent: Mozilla/5.0' --allow-overwrite=true"
-    args = "--optimize-concurrent-downloads --console-log-level=error --stderr=true -c -x16 -s16 -k1M -j5"
-    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/venv-torch241-cu121-kfa.tar.lz4"
-    fn = Path(url).name
-    
-    command_venv = f'aria2c {header} {args} -d {HOME} -o {fn} {url}'
-    subprocess.run(shlex.split(command_venv), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    # Installing dependencies
-    install_commands = []
-    if ENV_NAME == 'Google Colab':
-        # I agree with the author of the correction here ;3
-        for blyat in [
-            'sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python',
-            'sudo ln -sf /usr/bin/python3.10 /usr/bin/python3',
-            'sudo rm -rf /usr/local/lib/python3.10',
-            'sudo ln -sf /usr/local/lib/python3.11 /usr/local/lib/python3.10'
-        ]:
-            get_ipython().system(blyat)
-
-        install_commands = ["apt -y install python3.10-venv"]
-    else:
-        install_commands = ["pip install ipywidgets jupyterlab_widgets --upgrade"]
-        get_ipython().system('rm -f /usr/lib/python3.10/sitecustomize.py')
-
-    install_commands.extend(["apt -y install lz4 pv"])
-    
-    for cmd in install_commands:
-        subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    # Unpacking and cleaning
-    os.chdir(HOME)
-    get_ipython().system(f'pv {fn} | lz4 -d | tar xf -')
-    Path(fn).unlink()
-
-    get_ipython().system(f'rm -rf {VENV}/bin/pip* {VENV}/bin/python*')
-
-    # Create a virtual environment
-    venv_commands = [
-        f'python3 -m venv {VENV}',
-        f'{VENV}/bin/python3 -m pip install -q -U --force-reinstall pip',
-        f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
-    ]
-
-    for cmd in venv_commands:
-        subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-def install_packages(install_lib):
-    for index, (package, install_cmd) in enumerate(install_lib.items(), start=1):
-        print(f"\r[{index}/{len(install_lib)}] \033[32m>>\033[0m Installing \033[33m{package}\033[0m..." + " "*35, end='')
-        result = subprocess.run(install_cmd, shell=True, capture_output=True)
-        if result.returncode != 0:
-            print(f"\n\033[31mError installing {package}: {result.stderr.decode()}\033[0m")
-
-if not read_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps'):
-    install_lib = {
-        ## libs
-        "aria2": "pip install aria2",
-        "gdown": "pip install gdown",
-        # "pv": "apt -y install pv",
-        ## tunnels
-        "localtunnel": "npm install -g localtunnel",
-        "cloudflared": "curl -s -Lo /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && chmod +x /usr/bin/cl",
-        "zrok": "curl -sLO https://github.com/openziti/zrok/releases/download/v0.4.32/zrok_0.4.32_linux_amd64.tar.gz && tar -xzf zrok_0.4.32_linux_amd64.tar.gz -C /usr/bin && rm -f zrok_0.4.32_linux_amd64.tar.gz",
-        "ngrok": "curl -sLo ngrok.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz && tar -xzf ngrok.tgz && sudo mv ngrok /usr/bin/ngrok && sudo chmod +x /usr/bin/ngrok && rm -f ngrok.tgz" 
-    }
-
-    additional_libs = {
-        "Google Colab": {
-            # "xformers": "pip install xformers==0.0.28.post1 --no-deps"
-        },
-        "Kaggle": {
-            # "xformers": "pip install xformers==0.0.28.post1 --no-deps",
-            # "torch": "pip install torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121"
-        }
-    }
-
-    if ENV_NAME in additional_libs:
-        install_lib.update(additional_libs[ENV_NAME])
-
-    # Main Deps
-    print("💿 Installing the libraries, this will take some time.")
-    install_packages(install_lib)
-    clear_output()
-
-    # VENV
-    print("♻️ Installing VENV, this will take some time...")
-    setup_venv()
-    clear_output()
-
-    # update settings
-    update_json(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True)
-
-    print("🍪 The libraries and VENV are installed!")
-    time.sleep(2)
-    clear_output()
-
 # =================== WEBUI ===================
 start_timer = read_json(SETTINGS_PATH, 'ENVIRONMENT.start_timer')
 
@@ -156,7 +149,7 @@ if not os.path.exists(WEBUI):
     start_install = time.time()
     print(f"⌚ Unpacking Stable Diffusion... | WEBUI: \033[34m{UI}\033[0m", end='')
 
-    get_ipython().run_line_magic('run', f'{SCRIPTS}/UIs/{UI}.py')
+    ipyRun('run', f'{SCRIPTS}/UIs/{UI}.py')
     handle_setup_timer(WEBUI, start_timer)		# Setup timer (for ncpt timer-extensions)
 
     install_time = time.time() - start_install
@@ -177,38 +170,35 @@ if latest_webui or latest_extensions:
     action = "WebUI and Extensions" if latest_webui and latest_extensions else ("WebUI" if latest_webui else "Extensions")
     print(f"⌚️ Update {action}...", end='')
     with capture.capture_output():
-        get_ipython().system('git config --global user.email "you@example.com"')
-        get_ipython().system('git config --global user.name "Your Name"')
+        ipySys('git config --global user.email "you@example.com"')
+        ipySys('git config --global user.name "Your Name"')
 
         ## Update Webui
         if latest_webui:
-            get_ipython().run_line_magic('cd', '{WEBUI}')
-            get_ipython().system('git restore .')
-            get_ipython().system('git pull -X theirs --rebase --autostash')
+            CD(WEBUI)
+            ipySys('git restore .')
+            ipySys('git pull -X theirs --rebase --autostash')
 
         ## Update extensions
         if latest_extensions:
-            get_ipython().system('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\"$dir\\" && git reset --hard && git pull; done\'}')          
+            ipySys('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\"$dir\\" && git reset --hard && git pull; done\'}')          
     print(f"\r✨ Update {action} Completed!")
 
 
 # === FIXING EXTENSIONS ===
 with capture.capture_output():
     # --- Umi-Wildcard ---
-    get_ipython().system("sed -i '521s/open=\\(False\\|True\\)/open=False/' {WEBUI}/extensions/Umi-AI-Wildcards/scripts/wildcard_recursive.py  # Closed accordion by default")
-    # # --- Encrypt-Image ---
-    # get_ipython().system("sed -i '9,37d' {WEBUI}/extensions/Encrypt-Image/javascript/encrypt_images_info.js # Removes the weird text in webui")
-
+    ipySys("sed -i '521s/open=\\(False\\|True\\)/open=False/' {WEBUI}/extensions/Umi-AI-Wildcards/scripts/wildcard_recursive.py  # Closed accordion by default")
 
 ## Version switching
 if commit_hash:
     print('🔄 Switching to the specified version...', end="")
     with capture.capture_output():
-        get_ipython().run_line_magic('cd', '{WEBUI}')
-        get_ipython().system('git config --global user.email "you@example.com"')
-        get_ipython().system('git config --global user.name "Your Name"')
-        get_ipython().system('git reset --hard {commit_hash}')
-        get_ipython().system('git pull origin {commit_hash}')    # Get last changes in branch
+        CD(WEBUI)
+        ipySys('git config --global user.email "you@example.com"')
+        ipySys('git config --global user.name "Your Name"')
+        ipySys('git reset --hard {commit_hash}')
+        ipySys('git pull origin {commit_hash}')    # Get last changes in branch
     print(f"\r🔄 Switch complete! Current commit: \033[34m{commit_hash}\033[0m")
 
 
@@ -238,75 +228,6 @@ for path in PREFIXES.values():
     os.makedirs(path, exist_ok=True)
 
 ''' Formatted Info Output '''
-
-def format_output_line(line):
-    """Format a line of output with ANSI color codes."""
-    line = re.sub(r'\[', "\033[35m【\033[0m", line)
-    line = re.sub(r'\]', "\033[35m】\033[0m", line)
-    line = re.sub(r'(#)(\w+)', r'\1\033[32m\2\033[0m', line)
-    line = re.sub(r'(\(\d+%\))', r'\033[36m\1\033[0m', line)
-    line = re.sub(r'(CN:)(\d+)', r'\1\033[34m\2\033[0m', line)
-    line = re.sub(r'(DL:)(\d+\w+)', r'\1\033[32m\2\033[0m', line)
-    line = re.sub(r'(ETA:)(\d+\w+)', r'\1\033[33m\2\033[0m', line)
-    return line
-
-def handle_error_output(line, error_codes, error_messages):
-    """Check and collect error messages from the output."""
-    if 'errorCode' in line or 'Exception' in line:
-        error_codes.append(line)
-    if '|' in line and 'ERR' in line:
-        formatted_line = re.sub(r'(\|\s*)(ERR)(\s*\|)', r'\1\033[31m\2\033[0m\3', line)
-        error_messages.append(formatted_line)
-
-def monitor_aria2_download(args, dst_dir, out, url):
-    """Starts aria2c and intercepts the output to display the download progress."""
-    try:
-        command = f"{args} -d {dst_dir} {out} '{url}'"
-        process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-        error_codes = []
-        error_messages = []
-        result = ""
-        br = False
-
-        while True:
-            lines = process.stderr.readline()
-            if lines == '' and process.poll() is not None:
-                break
-
-            if lines:
-                result += lines
-
-                for output_line in lines.splitlines():
-                    handle_error_output(lines, error_codes, error_messages)
-
-                    if re.match(r'\[#\w{6}\s.*\]', output_line):
-                        formatted_line = format_output_line(output_line)
-                        for line in lines:
-                            print(f"\r{' ' * 180}\r{formatted_line}", end="")
-                            sys.stdout.flush()
-                        br = True
-                        break
-
-        # Print collected error messages
-        for error in error_codes + error_messages:
-            print(f" {error}")
-
-        if br:
-            print()
-
-        # Print final status
-        stripe = result.find("======+====+===========")
-        if stripe != -1:
-            for line in result[stripe:].splitlines():
-                if '|' in line and 'OK' in line:
-                    formatted_line = re.sub(r'(\|\s*)(OK)(\s*\|)', r'\1\033[32m\2\033[0m\3', line)
-                    print(f" {formatted_line}")
-
-        process.wait()
-
-    except KeyboardInterrupt:
-        print("\n\nDownload interrupted.")
 
 def _center_text(text, terminal_width=45):
     padding = (terminal_width - len(text)) // 2
@@ -395,14 +316,6 @@ def download(line):
     _UNPUCK_ZIP()
 
 def manual_download(url, dst_dir, file_name=None, prefix=None):
-    aria2_args = (
-        "aria2c --header='User-Agent: Mozilla/5.0' "
-        "--optimize-concurrent-downloads --console-log-level=error --summary-interval=1 --stderr=true "
-        "-c -x16 -s16 -k1M -j5"
-    )
-    if huggingface_token and "huggingface.co" in url:
-        aria2_args += f" --header='Authorization: Bearer {huggingface_token}'"
-
     clean_url = url
     image_url, image_name = None, None
     if 'civitai' in url:
@@ -422,8 +335,7 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
 
         # DL PREVIEW IMAGES | CIVITAI
         if image_url and image_name:
-            command = shlex.split(aria2_args) + ["-d", dst_dir, "-o", image_name, image_url]
-            subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            m_download(f"{image_url} {dst_dir} {image_name}")
 
     elif 'github' in url or 'huggingface.co' in url:
         if file_name and '.' not in file_name:
@@ -435,16 +347,12 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
     ## Formatted info output
     format_output(clean_url, dst_dir, file_name, image_url, image_name)
 
-    _run_aria2c(aria2_args, prefix, url, dst_dir, file_name)
+    # Downloading
+    # file_path = os.path.join(dst_dir, file_name)
+    # if os.path.exists(file_path) and prefix == 'config':
+    #     os.remove(file_path)
 
-def _run_aria2c(args, prefix, url, dst_dir, file_name=None):
-    """Starts the download using aria2c."""
-    file_path = os.path.join(dst_dir, file_name)
-    if os.path.exists(file_path) and prefix == 'config':
-        os.remove(file_path)
-
-    out = f"-o '{file_name}'" if file_name else ""
-    monitor_aria2_download(args, dst_dir, out, url)
+    m_download(f"{url} {dst_dir} {file_name}", log=True)
 
 ''' SubModels - Added URLs '''
 
@@ -580,7 +488,7 @@ def _clone_repository(repo, repo_name, extension_dir):
     """Clones the repository to the specified directory."""
     repo_name = repo_name or repo.split('/')[-1]
     command = f'cd {extension_dir} && git clone --depth 1 --recursive {repo} {repo_name} && cd {repo_name} && git fetch'
-    get_ipython().system(command)
+    ipySys(command)
 
 extension_type = 'nodes' if UI == 'ComfyUI' else 'extensions'
 
@@ -593,4 +501,4 @@ if extension_repo:
 
 
 ## List Models and stuff
-get_ipython().run_line_magic('run', f'{SCRIPTS}/download-result.py')
+ipyRun('run', f'{SCRIPTS}/download-result.py')

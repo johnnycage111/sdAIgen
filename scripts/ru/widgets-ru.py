@@ -24,11 +24,7 @@ widgets_js = JS / 'main-widgets.js'
 
 # ====================== WIDGETS =====================
 def read_model_data(file_path, data_type):
-    """
-    Reads model, VAE, or ControlNet data from the specified file.
-
-    The function loads data from a Python script and returns the corresponding list of model names based on the specified data type.
-    """
+    """Reads model, VAE, or ControlNet data from the specified file."""
     local_vars = {}
     
     with open(file_path) as f:
@@ -45,7 +41,7 @@ def read_model_data(file_path, data_type):
         return ['none', 'ALL'] + cnet_names
 
 webui_selection = {
-    'A1111': "--xformers",  # Remove: --no-half-vae
+    'A1111': "--xformers --no-half-vae",
     'ReForge': "--xformers --cuda-stream --pin-shared-memory",
     'ComfyUI': "--dont-print-server --preview-method auto --use-pytorch-cross-attention",
     'Forge': "--opt-sdp-attention --cuda-stream --cuda-malloc --pin-shared-memory"  # Remove: --disable-xformers 
@@ -208,8 +204,8 @@ def update_XL_options(change, widget):
     selected = change['new']
 
     default_model_values = {
-        True: ('3. WAI-illustrious [Anime] [V8] [XL]', 'none', 'none'),   # For XL models
-        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')   # For 1.5 models
+        True: ('3. WAI-illustrious [Anime] [V9] [XL]', 'none', 'none'),            # For XL models
+        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')    # For 1.5 models
     }
 
     # GET DATA MODELs | VAES| CNETs
