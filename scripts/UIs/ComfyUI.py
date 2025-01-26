@@ -1,7 +1,7 @@
 # ~ ComfyUI.py | by ANXETY ~
 
-from json_utils import read_json, update_json   # JSON (main)
-from Manager import m_download, m_clone         # Every Download | Clone
+from Manager import m_download, m_clone    # Every Download | Clone
+import json_utils as js                    # JSON
 
 from IPython.display import clear_output
 from IPython.utils import capture
@@ -24,13 +24,13 @@ SCR_PATH = HOME / 'ANXETY'
 SETTINGS_PATH = SCR_PATH / 'settings.json'
 
 REPO_URL = f"https://huggingface.co/NagisaNao/ANXETY/resolve/main/{UI}.zip"
-BRANCH = read_json(SETTINGS_PATH, 'ENVIRONMENT.branch')
-EXTS = read_json(SETTINGS_PATH, 'WEBUI.extension_dir')
+BRANCH = js.read(SETTINGS_PATH, 'ENVIRONMENT.branch')
+EXTS = js.read(SETTINGS_PATH, 'WEBUI.extension_dir')
 
 CD(HOME)
 
 
-# ==================== WEB UI OPERATIONS ====================
+## ================== WEB UI OPERATIONS ==================
 
 async def _download_file(url, directory, filename):
     os.makedirs(directory, exist_ok=True)
@@ -86,8 +86,7 @@ def unpack_webui():
     ipySys(f'unzip -q -o {zip_path} -d {WEBUI}')
     ipySys(f'rm -rf {zip_path}')
 
-# ==================== MAIN CODE ====================
-
+## ====================== MAIN CODE ======================
 if __name__ == "__main__":
     with capture.capture_output():
         unpack_webui()

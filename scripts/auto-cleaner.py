@@ -1,7 +1,7 @@
 # ~ auto-cleaner.py | by ANXETY ~
 
-from json_utils import read_json, save_json, update_json    # JSON (main)
-from widget_factory import WidgetFactory                    # WIDGETS
+from widget_factory import WidgetFactory    # WIDGETS
+import json_utils as js                     # JSON
 
 from IPython.display import display, HTML, clear_output
 import ipywidgets as widgets
@@ -25,13 +25,14 @@ cleaner_css = CSS / 'auto-cleaner.css'
 factory = WidgetFactory()
 HR = widgets.HTML('<hr>')
 
+## ================ loading settings V5 ==================
 def load_settings(path):
     """Load settings from a JSON file."""
     try:
         return {
-            **read_json(path, 'ENVIRONMENT'),
-            **read_json(path, 'WIDGETS'),
-            **read_json(path, 'WEBUI')
+            **js.read(path, 'ENVIRONMENT'),
+            **js.read(path, 'WIDGETS'),
+            **js.read(path, 'WEBUI')
         }
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error loading settings: {e}")
@@ -44,7 +45,8 @@ locals().update(settings)
 ## Load Css
 factory.load_css(cleaner_css)
 
-# ================ AutoCleaner function ================
+## ================= AutoCleaner function ================
+
 def _update_memory_info():
     disk_space = psutil.disk_usage(os.getcwd())
     total = disk_space.total / (1024 ** 3)
@@ -103,7 +105,8 @@ def execute_button_press(button):
 def hide_button_press(button):
     factory.close(container, class_names=['hide'], delay=0.5)
 
-# ================ AutoCleaner Widgets =================
+## ================= AutoCleaner Widgets =================
+
 factory = WidgetFactory()
 HR = widgets.HTML('<hr>')
 

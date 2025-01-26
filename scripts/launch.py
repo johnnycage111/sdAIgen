@@ -1,7 +1,7 @@
 # ~ launch.py | by ANXETY ~
 
-from json_utils import read_json, save_json, update_json
-from TunnelHub import Tunnel
+from TunnelHub import Tunnel    # Tunneling
+import json_utils as js         # JSON
 
 from IPython.display import clear_output
 from IPython import get_ipython
@@ -27,25 +27,32 @@ VENV = HOME / 'venv'
 SCR_PATH = HOME / 'ANXETY'
 SETTINGS_PATH = SCR_PATH / 'settings.json'
 
-ENV_NAME = read_json(SETTINGS_PATH, 'ENVIRONMENT.env_name')
-UI = read_json(SETTINGS_PATH, 'WEBUI.current')
-WEBUI = read_json(SETTINGS_PATH, 'WEBUI.webui_path')
+ENV_NAME = js.read(SETTINGS_PATH, 'ENVIRONMENT.env_name')
+UI = js.read(SETTINGS_PATH, 'WEBUI.current')
+WEBUI = js.read(SETTINGS_PATH, 'WEBUI.webui_path')
 
 # USER VENV
 py = Path(VENV) / 'bin/python3'
 
 
+## ================ loading settings V5 ==================
 def load_settings(path):
     """Load settings from a JSON file."""
     try:
         return {
-            **read_json(path, 'ENVIRONMENT'),
-            **read_json(path, 'WIDGETS'),
-            **read_json(path, 'WEBUI')
+            **js.read(path, 'ENVIRONMENT'),
+            **js.read(path, 'WIDGETS'),
+            **js.read(path, 'WEBUI')
         }
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error loading settings: {e}")
         return {}
+        
+# Load settings
+settings = load_settings(SETTINGS_PATH)
+locals().update(settings)
+
+## ======================= Other =========================
 
 def is_package_installed(package_name):
     """Check if a package is installed globally using npm."""
@@ -82,8 +89,9 @@ def trash_checkpoints():
     for path in paths:
         cmd = f"find {path} -type d -name .ipynb_checkpoints -exec rm -rf {{}} +"
         subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                
-## === Tunnel Functions ===
+
+## =================== Tunnel Functions ==================
+
 def _zrok_enable(token):
     zrok_env_path = Path(HOME) / '.zrok/environment.json'
 
@@ -148,19 +156,15 @@ def setup_tunnels(tunnel_port, public_ipv4):
 
     return tunnels
 
-
-## === Main ===
-# Load settings
-settings = load_settings(SETTINGS_PATH)
-locals().update(settings)
+## ========================= Main ========================
 
 print('Please Wait...')
 
 # Get public IP address
-public_ipv4 = read_json(SETTINGS_PATH, "ENVIRONMENT.public_ip", None)
+public_ipv4 = js.read(SETTINGS_PATH, "ENVIRONMENT.public_ip", None)
 if not public_ipv4:
     public_ipv4 = get_public_ip(version='ipv4')
-    update_json(SETTINGS_PATH, "ENVIRONMENT.public_ip", public_ipv4)
+    js.update(SETTINGS_PATH, "ENVIRONMENT.public_ip", public_ipv4)
 
 tunnel_port = 8188 if UI == 'ComfyUI' else 7860
 TunnelingService = Tunnel(tunnel_port)
@@ -226,3 +230,8 @@ with TunnelingService:
 timer = float(open(f'{WEBUI}/static/timer.txt', 'r').read())
 time_since_start = str(timedelta(seconds=time.time() - timer)).split('.')[0]
 print(f"\n⌚️ You have been conducting this session for - \033[33m{time_since_start}\033[0m")
+
+
+## Zrok Disable | PARANOYA
+if zrok_token:
+    ipySys('zrok disable &> /dev/null')

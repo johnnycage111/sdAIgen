@@ -1,19 +1,19 @@
 # ~ widgets.py | by ANXETY ~
 
-from json_utils import read_json, save_json, update_json  # JSON (main)
-from json_utils import key_or_value_exists, delete_key    # JSON (other)
-from widget_factory import WidgetFactory                  # WIDGETS
-from webui_utils import update_current_webui              # WEBUI
+from widget_factory import WidgetFactory        # WIDGETS
+from webui_utils import update_current_webui    # WEBUI
+import json_utils as js                         # JSON
 
 import ipywidgets as widgets
 from pathlib import Path
 import os
 
+
 # Constants
 HOME = Path.home()
 SCR_PATH = Path(HOME / 'ANXETY')
 SETTINGS_PATH = SCR_PATH / 'settings.json'
-ENV_NAME = read_json(SETTINGS_PATH, 'ENVIRONMENT.env_name')
+ENV_NAME = js.read(SETTINGS_PATH, 'ENVIRONMENT.env_name')
 
 SCRIPTS = SCR_PATH / 'scripts'
 
@@ -22,7 +22,9 @@ JS = SCR_PATH / 'JS'
 widgets_css = CSS / 'main-widgets.css'
 widgets_js = JS / 'main-widgets.js'
 
-# ====================== WIDGETS =====================
+
+## ======================= WIDGETS =======================
+
 def read_model_data(file_path, data_type):
     """Reads model, VAE, or ControlNet data from the specified file."""
     local_vars = {}
@@ -149,7 +151,7 @@ custom_file_urls_widget = factory.create_text('Файл (txt):')
 """Create button widgets."""
 save_button = factory.create_button('Сохранить', class_names=["button", "button_save"])
 
-# ================ DISPLAY / SETTINGS ================
+## ================== DISPLAY / SETTINGS =================
 
 factory.load_css(widgets_css)   # load CSS (widgets)
 factory.load_js(widgets_js)     # load JS (widgets)
@@ -179,7 +181,8 @@ WIDGET_LIST = factory.create_vbox([model_box, vae_box, additional_box, custom_do
                                   layouts=[{'width': '1080px'}]*4)    # style for the first four elements
 factory.display(WIDGET_LIST)
 
-# ================ CALLBACK FUNCTION ================
+## ================== CALLBACK FUNCTION ==================
+
 # Callback functions for updating widgets
 def update_change_webui(change, widget):
     selected_webui = change['new']
@@ -218,10 +221,10 @@ def update_XL_options(change, widget):
     model_widget.value, vae_widget.value, controlnet_widget.value = default_model_values[selected]
     
 # Connecting widgets
-factory.connect_widgets([(change_webui_widget, 'value')], [update_change_webui])
-factory.connect_widgets([(XL_models_widget, 'value')], [update_XL_options])
+factory.connect_widgets([(change_webui_widget, 'value')], update_change_webui)
+factory.connect_widgets([(XL_models_widget, 'value')], update_XL_options)
 
-## ============ Load / Save - Settings V3 ============
+## ============== Load / Save - Settings V3 ==============
 
 SETTINGS_KEYS = [
       'XL_models', 'model', 'model_num', 'inpainting_model', 'vae', 'vae_num',
@@ -234,14 +237,14 @@ SETTINGS_KEYS = [
 def save_settings():
     """Save widget values to settings."""
     widgets_values = {key: globals()[f"{key}_widget"].value for key in SETTINGS_KEYS}
-    save_json(SETTINGS_PATH, "WIDGETS", widgets_values)
+    js.save(SETTINGS_PATH, "WIDGETS", widgets_values)
 
     update_current_webui(change_webui_widget.value)  # Upadte Selected WebUI in setting.json
 
 def load_settings():
     """Load widget values from settings."""
-    if key_or_value_exists(SETTINGS_PATH, 'WIDGETS'):
-        widget_data = read_json(SETTINGS_PATH, 'WIDGETS')
+    if js.key_exists(SETTINGS_PATH, 'WIDGETS'):
+        widget_data = js.read(SETTINGS_PATH, 'WIDGETS')
         for key in SETTINGS_KEYS:
             if key in widget_data:
                 globals()[f"{key}_widget"].value = widget_data.get(key, "")

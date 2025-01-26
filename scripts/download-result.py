@@ -1,7 +1,7 @@
 # ~ download-result.py | by ANXETY ~
 
-from json_utils import read_json, save_json, update_json    # JSON (main)
-from widget_factory import WidgetFactory                    # WIDGETS
+from widget_factory import WidgetFactory    # WIDGETS
+import json_utils as js                     # JSON
 
 import ipywidgets as widgets
 from pathlib import Path
@@ -16,19 +16,20 @@ HOME = Path.home()
 SCR_PATH = Path(HOME / 'ANXETY')
 SETTINGS_PATH = SCR_PATH / 'settings.json'
 
-UI = read_json(SETTINGS_PATH, 'WEBUI.current')
+UI = js.read(SETTINGS_PATH, 'WEBUI.current')
 
 CSS = SCR_PATH / 'CSS'
 widgets_css = CSS / 'download-result.css'
 
 
+## ================= loading settings V5 =================
 def load_settings(path):
     """Load settings from a JSON file."""
     try:
         return {
-            **read_json(path, 'ENVIRONMENT'),
-            **read_json(path, 'WIDGETS'),
-            **read_json(path, 'WEBUI')
+            **js.read(path, 'ENVIRONMENT'),
+            **js.read(path, 'WIDGETS'),
+            **js.read(path, 'WEBUI')
         }
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error loading settings: {e}")
@@ -38,7 +39,8 @@ def load_settings(path):
 settings = load_settings(SETTINGS_PATH)
 locals().update(settings)
 
-# ====================== WIDGETS =====================
+## ======================= WIDGETS =======================
+
 HR = widgets.HTML('<hr class="divider-line">')
 HEADER_DL = 'DOWNLOAD RESULTS'
 VERSION = 'v0.53'
@@ -122,8 +124,8 @@ extensions_list = get_folders_list(extension_dir)
 extension_type = 'Nodes' if UI == 'ComfyUI' else 'Extensions'
 extensions_widget = output_container_generator(extension_type, extensions_list, is_grid=True)
 # ADetailers
-adetailer_list = get_all_files_list(adetailer_dir, ('.safetensors', '.pt'))
-adetailer_widget = output_container_generator('ADetailers', adetailer_list)
+adetailers_list = get_all_files_list(adetailer_dir, ('.safetensors', '.pt'))
+adetailers_widget = output_container_generator('ADetailers', adetailers_list)
 # ControlNet
 controlnets_list = get_controlnets_list(control_dir, r'^[^_]*_[^_]*_[^_]*_(.*)_fp16\.safetensors')
 controlnets_widget = output_container_generator('ControlNets', controlnets_list)
@@ -135,7 +137,7 @@ widgets_dict = {
     embeddings_widget: embeddings_list,
     loras_widget: loras_list,
     extensions_widget: extensions_list,
-    adetailer_widget: adetailer_list,
+    adetailers_widget: adetailers_list,
     controlnets_widget: controlnets_list
 }
 

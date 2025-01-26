@@ -14,6 +14,7 @@ import json
 import sys
 import os
 
+
 # Constants
 HOME = Path.home()
 SCR_PATH = HOME / 'ANXETY'
@@ -22,8 +23,10 @@ SETTINGS_PATH = SCR_PATH / 'settings.json'
 # Initialize async support for Jupyter
 nest_asyncio.apply()
 
-# ==================== DISPLAY ====================
-def display_info(env, scr_folder):
+
+## ======================= DISPLAY =======================
+
+def display_info(env, scr_folder, branch):
     content = f"""
     <div id="snow-container">
       <div id="text-container">
@@ -53,6 +56,7 @@ def display_info(env, scr_folder):
         <span>Done! Now you can run the cells below. ☄️</span>
         <span>Runtime environment: <span class="env">{env}</span></span>
         <span>File location: <span class="files-location">{scr_folder}</span></span>
+        <span>Current branch: <span class="branch">{branch}</span></span>
       </div>
     </div>
 
@@ -117,15 +121,12 @@ def display_info(env, scr_folder):
       filter: blur(0);
     }}
 
-    .env {{
-      color: #FFA500;
+    .env, .files-location, .branch {{
       transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }}
-
-    .files-location {{
-      color: #FF99C2;
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }}
+    .env {{ color: #FFA500; }}
+    .files-location {{ color: #FF99C2; }}
+    .branch {{ color: #16A543; }}
     </style>
 
     <script>
@@ -233,7 +234,7 @@ def display_info(env, scr_folder):
     display(HTML(content))
     display(HTML(SF))
 
-# ==================== ENVIRONMENT ====================
+## ===================== ENVIRONMENT =====================
 
 def key_or_value_exists(filepath, key=None, value=None):
     """Check for the existence of a key or value in a JSON file."""
@@ -266,7 +267,7 @@ def detect_environment():
             return name
     raise EnvironmentError(f"Unsupported runtime environment. Supported: {', '.join(environments.values())}")
 
-# ==================== MODULES ====================
+## ======================= MODULES =======================
 
 def clear_module_cache(modules_folder):
     """Clear the module cache for modules in the specified folder."""
@@ -284,7 +285,7 @@ def setup_module_folder(scr_folder):
     if str(modules_folder) not in sys.path:
         sys.path.append(str(modules_folder))
 
-# ==================== FILE HANDLING ====================
+## ==================== FILE HANDLING ====================
 
 """ Working with the environment """
 def save_environment_to_json(data, scr_folder):
@@ -376,9 +377,9 @@ async def download_files_async(scr_path, lang, branch):
         for future in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Downloading files", unit="file"):
             await future
 
-    clear_output(wait=True)
+    clear_output()
 
-# ======================= MAIN ======================
+## ========================= MAIN ========================
 
 async def main_async():
     """Main asynchronous function to run the script."""
@@ -398,7 +399,7 @@ async def main_async():
     env_data = create_environment_data(env, SCR_PATH, args.lang, args.branch)
     save_environment_to_json(env_data, SCR_PATH)
 
-    display_info(env, SCR_PATH)   # display info text
+    display_info(env, SCR_PATH, args.branch)   # display info text
 
 if __name__ == "__main__":
     asyncio.run(main_async())
