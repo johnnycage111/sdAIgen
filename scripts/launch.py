@@ -92,8 +92,24 @@ def trash_checkpoints():
 
 ## =================== Tunnel Functions ==================
 
+def check_tunnel_server(url, tunnel_name):
+    """Check if the tunnel server is reachable."""
+    timeout = 5
+    try:
+        response = requests.get(url, timeout=timeout)
+        if response.status_code == 200:
+            print(f"\033[32m> [SUCCESS]: Tunnel '\033[0m{tunnel_name}\033[32m' is reachable at {url}\033[0m")
+            return True
+        else:
+            error_message = f"returned status code '{response.status_code}'"
+    except requests.RequestException as e:
+        error_message = f"Unable to access the tunnel: {e}"
+
+    print(f"\033[31m> [ERROR]: Tunnel '\033[0m{tunnel_name}\033[31m' at {url} >> {error_message}\033[0m")
+    return False
+
 def _zrok_enable(token):
-    zrok_env_path = Path(HOME) / '.zrok/environment.json'
+    zrok_env_path = HOME / '.zrok/environment.json'
 
     current_token = None
     if zrok_env_path.exists():
@@ -105,11 +121,11 @@ def _zrok_enable(token):
     ipySys(f'zrok enable {token} &> /dev/null')
 
 def _ngrok_auth(token):
-    yml_path = Path(ROOT) / '.config/ngrok/ngrok.yml'
+    yml_ngrok_path = HOME / '.config/ngrok/ngrok.yml'
 
     current_token = None
-    if yml_path.exists():
-        with open(yml_path, 'r') as f:
+    if yml_ngrok_path.exists():
+        with open(yml_ngrok_path, 'r') as f:
             current_token = yaml.safe_load(f).get('agent', {}).get('authtoken')
 
     if current_token != token:
@@ -117,48 +133,64 @@ def _ngrok_auth(token):
         
 def setup_tunnels(tunnel_port, public_ipv4):
     """Setup tunneling commands based on available packages and configurations."""
-    tunnels = [
-        {
+    tunnels = []
+    
+    # Check Cloudflared
+    cloudflared_url = 'https://www.cloudflare.com'
+    if check_tunnel_server(cloudflared_url, "Cloudflared"):
+        tunnels.append({
             "command": f"cl tunnel --url localhost:{tunnel_port}",
             "name": "Cloudflared",
             "pattern": re.compile(r"[\w-]+\.trycloudflare\.com")
-        },
-        {
+        })
+
+    # Check LocalTunnel
+    if is_package_installed('localtunnel'):
+        localtunnel_url = 'https://localtunnel.me'
+        if check_tunnel_server(localtunnel_url, "Localtunnel"):
+            tunnels.append({
+                "command": f"lt --port {tunnel_port}",
+                "name": "Localtunnel",
+                "pattern": re.compile(r"[\w-]+\.loca\.lt"),
+                "note": f"Password : \033[32m{public_ipv4}\033[0m rerun cell if 404 error."
+            })
+
+    # Check Pinggy
+    pinggy_url = 'https://pinggy.io'
+    if check_tunnel_server(pinggy_url, "Pinggy"):
+        tunnels.append({
             "command": f"ssh -o StrictHostKeyChecking=no -p 80 -R0:localhost:{tunnel_port} a.pinggy.io",
             "name": "Pinggy",
             "pattern": re.compile(r"[\w-]+\.a\.free\.pinggy\.link")
-        }
-    ]
-
-    if is_package_installed('localtunnel'):
-        tunnels.append({
-            "command": f"lt --port {tunnel_port}",
-            "name": "Localtunnel",
-            "pattern": re.compile(r"[\w-]+\.loca\.lt"),
-            "note": f"Password : \033[32m{public_ipv4}\033[0m rerun cell if 404 error."
         })
 
+    # Check Zrok
     if zrok_token:
-        _zrok_enable(zrok_token)
-        tunnels.append({
-            "command": f"zrok share public http://localhost:{tunnel_port}/ --headless",
-            "name": "Zrok",
-            "pattern": re.compile(r"[\w-]+\.share\.zrok\.io")
-        })
+        zrok_url = 'https://status.zrok.io'
+        if check_tunnel_server(zrok_url, "Zrok"):
+            _zrok_enable(zrok_token)
+            tunnels.append({
+                "command": f"zrok share public http://localhost:{tunnel_port}/ --headless",
+                "name": "Zrok",
+                "pattern": re.compile(r"[\w-]+\.share\.zrok\.io")
+            })
         
+    # Check Ngrok
     if ngrok_token:
-        _ngrok_auth(ngrok_token)
-        tunnels.append({
-            "command": f"ngrok http http://localhost:{tunnel_port} --log stdout",
-            "name": "Ngrok",
-            "pattern": re.compile(r"https://[\w-]+\.ngrok-free\.app")
-        })
+        ngrok_url = 'https://ngrok.com'
+        if check_tunnel_server(ngrok_url, "Ngrok"):
+            _ngrok_auth(ngrok_token)
+            tunnels.append({
+                "command": f"ngrok http http://localhost:{tunnel_port} --log stdout",
+                "name": "Ngrok",
+                "pattern": re.compile(r"https://[\w-]+\.ngrok-free\.app")
+            })
 
     return tunnels
 
 ## ========================= Main ========================
 
-print('Please Wait...')
+print('Please Wait...\n')
 
 # Get public IP address
 public_ipv4 = js.read(SETTINGS_PATH, "ENVIRONMENT.public_ip", None)
@@ -215,11 +247,15 @@ with TunnelingService:
     ## Launch
     try:
         if UI == 'ComfyUI':
+            COMFYUI_SETTINGS_PATH = SCR_PATH / 'ComfyUI.json'
             if check_custom_nodes_deps:
                 ipySys(f'{py} install-deps.py')
-            print("Installing dependencies for ComfyUI from requirements.txt...")
-            subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            clear_output(wait=True)
+
+            if not js.key_exists(COMFYUI_SETTINGS_PATH, 'install_req', True):
+                print("Installing dependencies for ComfyUI from requirements.txt...")
+                subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                clear_output(wait=True)
+                js.save(COMFYUI_SETTINGS_PATH, 'install_req', True)
 
         print(f"🔧 WebUI: \033[34m{UI} \033[0m")
         ipySys(f'{py} {launcher} {commandline_arguments}')
