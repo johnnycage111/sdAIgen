@@ -98,7 +98,7 @@ def check_tunnel_server(url, tunnel_name):
     try:
         response = requests.get(url, timeout=timeout)
         if response.status_code == 200:
-            print(f"\033[32m> [SUCCESS]: Tunnel '\033[0m{tunnel_name}\033[32m' is reachable at {url}\033[0m")
+            print(f"\033[32m> [SUCCESS]: Tunnel '\033[0m{tunnel_name}\033[32m' is reachable at \033[0m{url}")
             return True
         else:
             error_message = f"returned status code '{response.status_code}'"
