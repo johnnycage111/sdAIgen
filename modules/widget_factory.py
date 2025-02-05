@@ -48,6 +48,19 @@ class WidgetFactory:
         return self.create_html(header)
 
     # Widgets
+    ## Supporting functions
+    def _apply_layouts(self, children, layouts):
+        """Apply layouts to children widgets."""
+        n_layouts = len(layouts)
+
+        if n_layouts == 1:
+            # Apply the single layout to all children
+            for child in children:
+                child.layout = layouts[0]
+        else:
+            for child, layout in zip(children, layouts):
+                child.layout = layout
+
     def _create_widget(self, widget_type, class_names=None, **kwargs):
         """Create a widget of a specified type with optional classes and styles."""
         style = kwargs.get('style', self.default_style)
@@ -64,18 +77,7 @@ class WidgetFactory:
 
         return widget
 
-    def _apply_layouts(self, children, layouts):
-        """Apply layouts to children widgets."""
-        n_layouts = len(layouts)
-
-        if n_layouts == 1:
-            # Apply the single layout to all children
-            for child in children:
-                child.layout = layouts[0]
-        else:
-            for child, layout in zip(children, layouts):
-                child.layout = layout
-
+    ## Creation functions
     def create_text(self, description, value='', placeholder='', class_names=None, **kwargs):
         """Create a text input widget."""
         return self._create_widget(
@@ -104,6 +106,11 @@ class WidgetFactory:
 
     def create_select_multiple(self, options, description, value=None, class_names=None, **kwargs):
         """Create a multiple select widget."""
+        if isinstance(value, str):
+            value = (value,)
+        elif value is None:
+            value = ()
+
         return self._create_widget(
             widgets.SelectMultiple,
             options=options,

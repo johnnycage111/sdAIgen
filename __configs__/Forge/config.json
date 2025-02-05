@@ -1,7 +1,11 @@
 {
+    "sd_t2i_sampler": "DPM++ 2M",
+    "sd_t2i_scheduler": "Karras",
+    "sd_i2i_sampler": "DPM++ 2M",
+    "sd_i2i_scheduler": "Karras",
     "aria2_flags": "--optimize-concurrent-downloads --console-log-level=error -j5 -x16 -s16 -k1M -c",
     "unpack_zip": true,
-    "ad_max_models": 6,
+    "ad_max_models": 5,
     "control_net_unit_count": 6,
     "cross_attention_optimization": "xformers",
     "state_txt2img": [
@@ -54,7 +58,6 @@
         "LMS"
     ],
     "CLIP_stop_at_last_layers": 2,
-    "sd_vae": "None",
     "quicksettings_list": [
         "sd_model_checkpoint",
         "sd_vae",
@@ -100,10 +103,6 @@
     "live_previews_image_format": "webp",
     "live_preview_refresh_period": 100.0,
     "live_preview_fast_interrupt": true,
-    "sd_t2i_sampler": "DPM++ 2M",
-    "sd_t2i_scheduler": "Karras",
-    "sd_i2i_sampler": "DPM++ 2M",
-    "sd_i2i_scheduler": "Karras",
     "extra_networks_card_width": 200.0,
     "extra_networks_card_height": 300.0,
     "extra_networks_card_text_scale": 0.8

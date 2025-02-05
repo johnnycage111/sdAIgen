@@ -31,7 +31,7 @@ ENV_NAME = js.read(SETTINGS_PATH, 'ENVIRONMENT.env_name')
 UI = js.read(SETTINGS_PATH, 'WEBUI.current')
 WEBUI = js.read(SETTINGS_PATH, 'WEBUI.webui_path')
 
-# USER VENV
+# USER VENV | python
 py = Path(VENV) / 'bin/python3'
 
 
@@ -74,14 +74,12 @@ def get_public_ip(version='ipv4'):
 
 def update_config_paths(config_path, paths_to_check):
     """Update configuration paths in the specified JSON config file."""
-    if os.path.exists(config_path):
-        with open(config_path, 'r') as file:
-            config_data = json.load(file)
-        for key, expected_value in paths_to_check.items():
-            if key in config_data and config_data[key] != expected_value:
-                sed_command = f"sed -i 's|\"{key}\": \".*\"|\"{key}\": \"{expected_value}\"|' {config_path}"
-                ipySys(sed_command)
-                
+    for key, expected_value in paths_to_check.items():
+        if js.key_exists(config_path, key):
+            js.update(config_path, key, expected_value)
+        else:
+            js.save(config_path, key, expected_value)
+             
 def trash_checkpoints():
     dirs = ["A1111", "ReForge", "ComfyUI", "Forge"]
     paths = [Path(HOME) / name for name in dirs]
@@ -250,12 +248,13 @@ with TunnelingService:
             COMFYUI_SETTINGS_PATH = SCR_PATH / 'ComfyUI.json'
             if check_custom_nodes_deps:
                 ipySys(f'{py} install-deps.py')
+                clear_output(wait=True)
 
             if not js.key_exists(COMFYUI_SETTINGS_PATH, 'install_req', True):
                 print("Installing dependencies for ComfyUI from requirements.txt...")
                 subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                clear_output(wait=True)
                 js.save(COMFYUI_SETTINGS_PATH, 'install_req', True)
+                clear_output(wait=True)
 
         print(f"🔧 WebUI: \033[34m{UI} \033[0m")
         ipySys(f'{py} {launcher} {commandline_arguments}')
@@ -271,3 +270,4 @@ print(f"\n⌚️ You have been conducting this session for - \033[33m{time_since
 ## Zrok Disable | PARANOYA
 if zrok_token:
     ipySys('zrok disable &> /dev/null')
+    print('🔐 Zrok tunnel was disabled :3')

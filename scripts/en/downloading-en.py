@@ -80,7 +80,7 @@ def setup_venv():
         f'{VENV}/bin/python3 -m pip install ipykernel',
         f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
     ]
-    if UI in ['Forge', 'ComfyUI']:
+    if UI == 'Forge':
         venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
 
     install_dependencies(venv_commands)
@@ -117,9 +117,6 @@ if not VENV.exists():
     setup_venv()
     clear_output()
 
-# print("🍪 The libraries and VENV are installed!")
-# time.sleep(2)
-# clear_output()
 
 ## ================ loading settings V5 ==================
 def load_settings(path):
