@@ -48,7 +48,7 @@ def install_dependencies(commands):
 
 def setup_venv():
     """Customize the virtual environment."""
-    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/venv-torch251-cu121-Kfac.tar.lz4"
+    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/venv-torch251-cu121-K-all.tar.lz4"
     fn = Path(url).name
 
     m_download(f'{url} {HOME} {fn}')
@@ -57,6 +57,14 @@ def setup_venv():
     install_commands = []
     if ENV_NAME == 'Google Colab':
         install_commands.append("apt -y install python3.10-venv")
+        
+        # for blyat in [
+        #     'sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python',
+        #     'sudo ln -sf /usr/bin/python3.10 /usr/bin/python3',
+        #     'sudo rm -rf /usr/local/lib/python3.10',
+        #     'sudo ln -sf /usr/local/lib/python3.11 /usr/local/lib/python3.10'
+        # ]:
+        #     ipySys(blyat)
     else:
         install_commands.extend([
             "pip install ipywidgets jupyterlab_widgets --upgrade",
@@ -80,8 +88,8 @@ def setup_venv():
         f'{VENV}/bin/python3 -m pip install ipykernel',
         f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
     ]
-    if UI == 'Forge':
-        venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
+    # if UI == 'Forge':
+    venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
 
     install_dependencies(venv_commands)
 
@@ -136,6 +144,19 @@ locals().update(settings)
 
 ## ======================== WEBUI ========================
 
+if UI != 'ComfyUI' and not os.path.exists('/root/.cache/huggingface/hub/models--Bingsu--adetailer'):
+    print('🚚 Распаковка кэша моделей ADetailer...')
+
+    name_zip = 'hf_cache_adetailer'
+    chache_url = 'https://huggingface.co/NagisaNao/ANXETY/resolve/main/hf_chache_adetailer.zip'
+
+    zip_path = f'{HOME}/{name_zip}.zip'
+    m_download(f'{chache_url} {HOME} {name_zip}')
+    ipySys(f'unzip -q -o {zip_path} -d /')
+    ipySys(f'rm -rf {zip_path}')
+
+    clear_output()
+
 start_timer = js.read(SETTINGS_PATH, 'ENVIRONMENT.start_timer')
 
 if not os.path.exists(WEBUI):
@@ -174,7 +195,13 @@ if latest_webui or latest_extensions:
 
         ## Update extensions
         if latest_extensions:
-            ipySys('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\"$dir\\" && git reset --hard && git pull; done\'}')
+            # ipySys('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\"$dir\\" && git reset --hard && git pull; done\'}')
+            for entry in os.listdir(f'{WEBUI}/extensions'):
+                dir_path = f'{WEBUI}/extensions/{entry}'
+                if os.path.isdir(dir_path):
+                    subprocess.run(['git', 'reset', '--hard'], cwd=dir_path)
+                    subprocess.run(['git', 'pull'], cwd=dir_path)
+
     print(f"\r✨ Обновление {action} Завершено!")
 
 
@@ -218,6 +245,15 @@ PREFIXES = {
     "clip": clip_dir,
     "config": WEBUI
 }
+SHORT_PREFIXES = {
+    "model": "$ckpt",
+    "embed": "$emb",
+    "extension": "$ext",
+    "adetailer": "$ad",
+    "control": "$cnet",
+    "upscale": "$ups",
+    "config": "$cfg"
+}
 for path in PREFIXES.values():
     os.makedirs(path, exist_ok=True)
 
@@ -227,7 +263,7 @@ def _center_text(text, terminal_width=45):
     padding = (terminal_width - len(text)) // 2
     return f"{' ' * padding}{text}{' ' * padding}"
 
-def format_output(url, dst_dir, file_name, image_url=None, image_name=None, paid_model=None):
+def format_output(url, dst_dir, file_name, image_url=None, image_name=None):
     info = _center_text(f"[{file_name.split('.')[0]}]")
     sep_line = '---' * 20
 
@@ -287,7 +323,7 @@ def _handle_manual_download(link):
             try:
                 manual_download(path, dir, file_name=file_name, prefix=prefix)
             except Exception as e:
-                print(f"Error downloading file: {e}")
+                print(f"\nError downloading file: {e}")
         else:
             extension_repo.append((path, file_name))
 
@@ -415,36 +451,48 @@ line = handle_submodels(controlnet, controlnet_num, controlnet_list, control_dir
 
 ''' file.txt - added urls '''
 
-def process_file_downloads(file_urls, prefixes):
+def process_file_downloads(file_urls, prefixes, additional_lines=None):
     files_urls = ""
     unique_urls = set()
-    
+
+    if additional_lines:
+        lines = additional_lines.splitlines()
+    else:
+        lines = []
+
     for file_url in file_urls:
         if file_url.startswith("http"):
             file_url = _STRIP_URL(file_url)
             response = requests.get(file_url)
-            lines = response.text.splitlines()
+            lines += response.text.splitlines()
         else:
             try:
                 with open(file_url, 'r') as file:
-                    lines = file.readlines()
+                    lines += file.readlines()
             except FileNotFoundError:
                 continue
 
-        current_tag = None
-        for line in lines:
-            line = line.strip()
-            for prefix in prefixes.keys():
-                if f'# {prefix}'.lower() in line.lower():
-                    current_tag = prefix
-                    break
+    current_tag = None
+    for line in lines:
+        tag_line = line.strip().lower()
+        for prefix in prefixes.keys():
+            long_tag = f'# {prefix}'
+            short_tag = SHORT_PREFIXES.get(prefix, None)
+            
+            if (long_tag.lower() in tag_line) or (short_tag and short_tag.lower() in tag_line):
+                current_tag = prefix
+                break
 
-            urls = [url.split('#')[0].strip() for url in line.split(',')]
-            for url in urls:
-                filter_url = url.split('[')[0].strip()
-                if url.startswith("http") and filter_url not in unique_urls:
-                    files_urls += f"{current_tag}:{url}, "
-                    unique_urls.add(filter_url)
+        urls = [url.split('#')[0].strip() for url in line.split(',')]
+        for url in urls:
+            filter_url = url.split('[')[0].strip()
+            if url.startswith("http") and filter_url not in unique_urls:
+                files_urls += f"{current_tag}:{url}, "
+                unique_urls.add(filter_url)
+
+    # Return string if no tag was found | FIX
+    if current_tag is None:
+        return ''
 
     return files_urls
 
@@ -454,7 +502,7 @@ if custom_file_urls:
     file_urls = [f"{custom_file}.txt" if not custom_file.endswith('.txt') else custom_file 
                  for custom_file in custom_file_urls.replace(',', '').split()]
 
-file_urls_result = process_file_downloads(file_urls, PREFIXES)
+file_urls_result = process_file_downloads(file_urls, PREFIXES, empowerment_output)
 
 # URL prefixing
 urls = (Model_url, Vae_url, LoRA_url, Embedding_url, Extensions_url, ADetailer_url)

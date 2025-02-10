@@ -92,7 +92,7 @@ def trash_checkpoints():
 
 def check_tunnel_server(url, tunnel_name):
     """Check if the tunnel server is reachable."""
-    timeout = 5
+    timeout = 2
     try:
         response = requests.get(url, timeout=timeout)
         if response.status_code == 200:

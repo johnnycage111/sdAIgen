@@ -25,6 +25,31 @@ a {
     text-decoration: none;
 }
 
+/* Sprecial Styles */
+/* === ScrollBar === */
+.widget-textarea textarea::-webkit-scrollbar {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+.widget-textarea textarea::-webkit-scrollbar-thumb {
+  background: #475254 !important;
+  border-radius: 16px;
+  border: 3px solid #111111;
+}
+.widget-textarea textarea::-webkit-scrollbar-thumb:hover {
+  background: #db88ae !important;
+}
+.widget-textarea textarea::-webkit-scrollbar-track,
+.widget-textarea textarea::-webkit-scrollbar-corner {
+  background: #111111 !important;
+  border-radius: 0 8px 8px 0;
+}
+/* FireFox */ 
+.widget-textarea textarea {
+  scrollbar-width: auto;
+  scrollbar-color: #475254 #111111;
+}
+
 /* Text FONTs */
 
 .info,
@@ -36,6 +61,7 @@ a {
 .widget-checkbox label,
 .widget-dropdown label,
 .widget-dropdown select,
+.widget-textarea textarea,
 .widget-text input[type="text"] {
     font-family: "Shantell Sans", serif;
     font-optical-sizing: auto;
@@ -96,7 +122,8 @@ a {
 /* Input field styles */
 
 .widget-dropdown select,
-.widget-text input[type="text"] {
+.widget-text input[type="text"],
+.widget-textarea textarea {
     height: 30px;
     background-color: #1c1c1c;
     border: 1px solid #262626;
@@ -104,9 +131,15 @@ a {
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease-in-out;
 }
+.widget-textarea textarea {
+    height: 200px;
+    resize: none;
+    overflow: auto;
+}
 
 .widget-dropdown select:focus,
-.widget-text input[type="text"]:focus {
+.widget-text input[type="text"]:focus,
+.widget-textarea textarea:focus {
     border-color: #006ee5;
 }
 
@@ -145,6 +178,9 @@ a {
 }
 .sdxl input[type="checkbox"]:checked {
     background-color: #EA861A;  
+}
+.empowerment input[type="checkbox"]:checked {
+    background-color: #DF6B91;  
 }
 
 .widget-checkbox input[type="checkbox"]:before {
@@ -208,7 +244,18 @@ a {
     white-space: nowrap;
 }
 
-.info.showed {
+/* For Empowerment */
+.empowerment {
+    position: absolute;
+    top: 10px;
+    left: 300px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.info.showed,
+.empowerment.showed {
     opacity: 1;
     pointer-events: auto;
 }
