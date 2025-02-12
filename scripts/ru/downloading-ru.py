@@ -88,8 +88,8 @@ def setup_venv():
         f'{VENV}/bin/python3 -m pip install ipykernel',
         f'{VENV}/bin/python3 -m pip uninstall -y ngrok pyngrok'
     ]
-    # if UI == 'Forge':
-    venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
+    if UI == 'Forge':
+        venv_commands.append(f'{VENV}/bin/python3 -m pip uninstall -y transformers')
 
     install_dependencies(venv_commands)
 
@@ -176,7 +176,7 @@ else:
 
     timer_env = handle_setup_timer(WEBUI, start_timer)
     elapsed_time = str(timedelta(seconds=time.time() - timer_env)).split('.')[0]
-    print(f"⌚️ Вы проводите эту сессию в течение - \033[33m{elapsed_time}\033[0m")
+    print(f"⌚️ Продолжительность сеанса: \033[33m{elapsed_time}\033[0m")
 
 
 ## Changes extensions and WebUi
