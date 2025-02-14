@@ -14,6 +14,7 @@ from pathlib import Path
 import subprocess
 import requests
 import zipfile
+import shutil
 import shlex
 import time
 import json
@@ -264,7 +265,12 @@ def _center_text(text, terminal_width=45):
     return f"{' ' * padding}{text}{' ' * padding}"
 
 def format_output(url, dst_dir, file_name, image_url=None, image_name=None):
-    info = _center_text(f"[{file_name.split('.')[0]}]")
+    info = "[ NONE ]"
+    if file_name:
+        info = _center_text(f"[{file_name.split('.')[0]}]")
+    if not file_name and 'drive.google.com' in url:
+      info = _center_text("[ GDrive ]")
+
     sep_line = '---' * 20
 
     print(f"\n\033[32m{sep_line}\033[36;1m{info}\033[32m{sep_line}\033[0m")
@@ -377,7 +383,7 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
     # if os.path.exists(file_path) and prefix == 'config':
     #     os.remove(file_path)
 
-    m_download(f"{url} {dst_dir} {file_name}", log=True)
+    m_download(f"{url} {dst_dir} {file_name if file_name else ''}", log=True)
 
 ''' SubModels - Added URLs '''
 
@@ -539,6 +545,26 @@ if extension_repo:
         for repo, repo_name in extension_repo:
             _clone_repository(repo, repo_name, extension_dir)
     print(f"\r📦 Installed '{len(extension_repo)}' custom {extension_type}!")
+
+
+# === SPECIAL ===
+## Sorting models `bbox` and `segm` | Only ComfyUI
+if UI == 'ComfyUI':
+    dirs = {'segm': '-seg.pt', 'bbox': None}
+    for d in dirs:
+        os.makedirs(os.path.join(adetailer_dir, d), exist_ok=True)
+
+    for filename in os.listdir(adetailer_dir):
+        src = os.path.join(adetailer_dir, filename)
+
+        if os.path.isfile(src) and filename.endswith('.pt'):
+            dest_dir = 'segm' if filename.endswith('-seg.pt') else 'bbox'
+            dest = os.path.join(adetailer_dir, dest_dir, filename)
+
+            if os.path.exists(dest):
+                os.remove(src)
+            else:
+                shutil.move(src, dest)
 
 
 ## List Models and stuff
