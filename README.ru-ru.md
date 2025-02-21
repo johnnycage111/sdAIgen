@@ -19,11 +19,11 @@
 </div>
 
 ## 🌟 Особенности:
-  - Мультиплатформенный блокнот: **Google Colab (Pro|Free), Kaggle.**
+  - Мультиплатформенный блокнот: **Google Colab, Kaggle.**
   - *Виджеты* для простого взаимодействия.
   - Предустановленные пользовательские настройки + стили.
   - Скачивание превью для *моделей, LoRa и embedding* (CivitAi) | ***Для Kaggle есть ограничения.***
-  - Выбор WebUI между *A1111*, *ReForge*, *ComfyUI* и *Forge.*
+  - Выбор WebUI между *A1111*, *ComfyUI*, *Forge*, *ReForge*, *SD-UX.*
 
 <details>
 <summary>Установленные Расширения</summary>
@@ -39,6 +39,7 @@
 - [Encrypt-Image](https://github.com/gutris1/sd-encrypt-image)
 - [SD-hHb](https://github.com/gutris1/sd-hub)
 - [Image-Info](https://github.com/gutris1/sd-image-info)
+- [Image-Viewer](https://github.com/gutris1/sd-image-viewer)
 - [State](https://github.com/ilian6806/stable-diffusion-webui-state)
 - [SuperMerger](https://github.com/hako-mikan/sd-webui-supermerger)
 - [Tag-Complete](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete)

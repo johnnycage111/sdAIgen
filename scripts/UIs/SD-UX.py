@@ -1,4 +1,4 @@
-# ~ A1111.py | by ANXETY ~
+# ~ SD-UX.py | by ANXETY ~
 
 from Manager import m_download, m_clone    # Every Download | Clone
 import json_utils as js                    # JSON
@@ -16,7 +16,7 @@ CD = os.chdir
 ipySys = get_ipython().system
 
 # Constants
-UI = 'A1111'
+UI = 'SD-UX'
 
 HOME = Path.home()
 WEBUI = HOME / UI
@@ -77,7 +77,7 @@ async def download_configuration():
     extensions_list = [
         ## ANXETY Edits
         "https://github.com/anxety-solo/webui_timer timer",
-        "https://github.com/anxety-solo/anxety-theme",
+        "https://github.com/anxety-solo/anxety-theme-ux",
         "https://github.com/anxety-solo/sd-civitai-browser-plus Civitai-Browser-Plus",
         
         ## OTHER | ON

@@ -43,10 +43,11 @@ def read_model_data(file_path, data_type):
         return ['none', 'ALL'] + cnet_names
 
 webui_selection = {
-    'A1111': "--xformers",  # Removed: --no-half-vae
-    'ReForge': "--xformers --cuda-stream --pin-shared-memory",
+    'A1111':   "--xformers --no-half-vae",
     'ComfyUI': "--dont-print-server --preview-method auto --use-pytorch-cross-attention",
-    'Forge': "--opt-sdp-attention --cuda-stream --pin-shared-memory"  # Removed: --disable-xformers --cuda-malloc
+    'Forge':   "--opt-sdp-attention --cuda-stream --pin-shared-memory",  # Removed: --disable-xformers --cuda-malloc",
+    'ReForge': "--xformers --cuda-stream --pin-shared-memory",
+    'SD-UX':   "--xformers --no-half-vae"
 }
 
 # Initialize the WidgetFactory
@@ -59,7 +60,7 @@ model_header = factory.create_header('Model Selection')
 model_options = read_model_data(f'{SCRIPTS}/_models-data.py', 'model')
 model_widget = factory.create_dropdown(model_options, 'Model:', '4. Counterfeit [Anime] [V3] + INP')
 model_num_widget = factory.create_text('Model Number:', '', 'Enter the model numbers for the download.')
-inpainting_model_widget = factory.create_checkbox('Inpainting Models', False, class_names=['inpaint'])
+inpainting_model_widget = factory.create_checkbox('Inpainting Models', False, class_names=['inpaint'], layout={'width': '25%'})
 XL_models_widget = factory.create_checkbox('SDXL', False, class_names=['sdxl'])
 
 switch_model_widget = factory.create_hbox([inpainting_model_widget, XL_models_widget])
@@ -149,9 +150,7 @@ https://civitai.com/api/download/models/229782
 
 # Extension
 https://github.com/hako-mikan/sd-webui-cd-tuner[CD-Tuner]
-""",
-layout={'width': '100%'}
-)
+""")
 
 Model_url_widget = factory.create_text('Model:')
 Vae_url_widget = factory.create_text('Vae:')
@@ -208,7 +207,7 @@ def update_XL_options(change, widget):
     selected = change['new']
 
     default_model_values = {
-        True: ('3. WAI-illustrious [Anime] [V10] [XL]', 'none', 'none'),            # For XL models
+        True: ('3. WAI-illustrious [Anime] [V11] [XL]', 'none', 'none'),            # For XL models
         False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')    # For 1.5 models
     }
 

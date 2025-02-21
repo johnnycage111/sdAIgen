@@ -19,11 +19,11 @@ English | [Русский](README.ru-ru.md)
 </div>
 
 ## 🌟 Features:
-  - Multiplatform notebook: *Google Colab (Pro|Free), Kaggle.*
+  - Multiplatform notebook: *Google Colab, Kaggle.*
   - *Widgets* for easy interaction.
   - Preset custom settings + styles.
   - Download previews for *models, LoRa and embedding* (CivitAi) | ***There are limitations for Kaggle.***
-  - Choosing WebUI between *A1111*, *ReForge*, *ComfyUI* and *Forge.*
+  - Choosing WebUI between *A1111*, *ComfyUI*, *Forge*, *ReForge*, *SD-UX.*
 
 <details>
 <summary>Installed Extensions</summary>
@@ -39,6 +39,7 @@ English | [Русский](README.ru-ru.md)
 - [Encrypt-Image](https://github.com/gutris1/sd-encrypt-image)
 - [SD-hHb](https://github.com/gutris1/sd-hub)
 - [Image-Info](https://github.com/gutris1/sd-image-info)
+- [Image-Viewer](https://github.com/gutris1/sd-image-viewer)
 - [State](https://github.com/ilian6806/stable-diffusion-webui-state)
 - [SuperMerger](https://github.com/hako-mikan/sd-webui-supermerger)
 - [Tag-Complete](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete)

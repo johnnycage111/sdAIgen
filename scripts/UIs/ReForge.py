@@ -37,6 +37,10 @@ CD(HOME)
 async def _download_file(url, directory, filename):
     os.makedirs(directory, exist_ok=True)
     file_path = os.path.join(directory, filename)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
     process = await asyncio.create_subprocess_shell(
         f'curl -sLo {file_path} {url}',
         stdout=subprocess.DEVNULL,
@@ -56,12 +60,16 @@ async def download_files(file_list):
 
 async def download_configuration():
     ## FILES
-    url_af = f'https://raw.githubusercontent.com/anxety-solo/sdAIgen/refs/heads/{BRANCH}/__configs__/'
+    url_cfg = f'https://raw.githubusercontent.com/anxety-solo/sdAIgen/refs/heads/{BRANCH}/__configs__'
     configs = [
-        f'{url_af}/{UI}/config.json',
-        f'{url_af}/{UI}/ui-config.json',
-        f'{url_af}/styles.csv',
-        f'{url_af}/user.css',
+        # settings
+        f'{url_cfg}/{UI}/config.json',
+        f'{url_cfg}/{UI}/ui-config.json',
+        f'{url_cfg}/styles.csv',
+        f'{url_cfg}/user.css',
+        # other
+        f'{url_cfg}/card-no-preview.png, {WEBUI}/html',
+        f'{url_cfg}/notification.mp3'
     ]
     await download_files(configs)
 
@@ -73,13 +81,13 @@ async def download_configuration():
         "https://github.com/anxety-solo/sd-civitai-browser-plus Civitai-Browser-Plus",
         
         ## OTHER | ON
+        "https://github.com/gutris1/sd-image-viewer Image-Viewer",
         "https://github.com/gutris1/sd-image-info Image-Info",
         "https://github.com/gutris1/sd-hub SD-Hub",
 
         ## OTHER | OFF
         # "https://github.com/Bing-su/adetailer Adetailer",
         # "https://github.com/thomasasfk/sd-webui-aspect-ratio-helper Aspect-Ratio-Helper",
-        # "https://github.com/richrobber2/canvas-zoom Canvas-Zoom",
         # "https://github.com/zanllp/sd-webui-infinite-image-browsing Infinite-Image-Browsing",
         # "https://github.com/hako-mikan/sd-webui-regional-prompter Regional-Prompter",
         # "https://github.com/ilian6806/stable-diffusion-webui-state State",
