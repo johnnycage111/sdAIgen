@@ -83,7 +83,7 @@ def _update_config_paths():
 def get_launch_command(tunnel_port):
     """Construct launch command based on configuration"""
     base_args = commandline_arguments
-    password = '82a973c04367123ae98bd9abdf80d9eda9b910e2'
+    password = 'ha4ez7147b5vdlu5u8f8flrllgn61kpbgbh6emil'
 
     if UI == 'ComfyUI':
         return f'{py} main.py {base_args}'
