@@ -1,4 +1,4 @@
-2# ~ widgets.py | by ANXETY ~
+# ~ widgets.py | by ANXETY ~
 
 from widget_factory import WidgetFactory        # WIDGETS
 from webui_utils import update_current_webui    # WEBUI
@@ -28,10 +28,10 @@ widgets_js = JS / 'main-widgets.js'
 def read_model_data(file_path, data_type):
     """Reads model, VAE, or ControlNet data from the specified file."""
     local_vars = {}
-    
+
     with open(file_path) as f:
         exec(f.read(), {}, local_vars)
-    
+
     if data_type == "model":
         model_names = list(local_vars['model_list'].keys())   # Return model names
         return ['none'] + model_names
@@ -141,14 +141,14 @@ custom_download_header_popup = factory.create_html('''
 empowerment_widget = factory.create_checkbox('Расширение возможностей', False, class_names=['empowerment'])
 empowerment_output_widget = factory.create_textarea(
 '', '', """Используйте специальные теги. Портативный аналог "Файл (txt)"
-Доступные теги: model, vae, lora, embed, extension, adetailer, control, upscale, clip, unet, config
----
-Например:
+Доступные теги: model (ckpt), vae, lora, embed (emb), extension (ext), adetailer (ad), control (cnet), upscale (ups), clip, unet, config (cfg)
+Короткие-теги: начинаются с '$' без пробела -> $ckpt
+------ Например ------
 
 # Lora
 https://civitai.com/api/download/models/229782
 
-# Extension
+$ext
 https://github.com/hako-mikan/sd-webui-cd-tuner[CD-Tuner]
 """)
 
@@ -193,25 +193,25 @@ additional_box = factory.create_vbox(additional_widgets, class_names=["container
 custom_download_box = factory.create_vbox(custom_download_widgets, class_names=["container", "container_cdl"])
 
 WIDGET_LIST = factory.create_vbox([model_box, vae_box, additional_box, custom_download_box, save_button],
-                                  layouts=[{'width': '1080px'}]*4)    # style for the first four elements
+                                  class_names=["mainContainer"])
 factory.display(WIDGET_LIST)
 
 ## ================== CALLBACK FUNCTION ==================
 
-# Initialize visibility
-check_custom_nodes_deps_widget.layout.display = 'none'  # Initially hidden
-empowerment_output_widget.layout.display = 'none'       # Initially hidden
+# Initialize visibility | hidden
+check_custom_nodes_deps_widget.layout.display = 'none'
+empowerment_output_widget.layout.display = 'none'
 
 # Callback functions for XL options
 def update_XL_options(change, widget):
     selected = change['new']
 
     default_model_values = {
-        True: ('3. WAI-illustrious [Anime] [V11] [XL]', 'none', 'none'),            # For XL models
-        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')    # For 1.5 models
+        True: ('3. WAI-illustrious [Anime] [V11] [XL]', 'none', 'none'),           # XL models
+        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')    # SD 1.5 models
     }
 
-    # GET DATA MODELs | VAES| CNETs
+    # Get data - MODELs | VAEs | CNETs
     data_file = '_xl-models-data.py' if selected else '_models-data.py'
     model_widget.options = read_model_data(f'{SCRIPTS}/{data_file}', 'model')
     vae_widget.options = read_model_data(f'{SCRIPTS}/{data_file}', 'vae')
@@ -225,7 +225,7 @@ def update_change_webui(change, widget):
     selected_webui = change['new']
     commandline_arguments = webui_selection.get(selected_webui, "")
     commandline_arguments_widget.value = commandline_arguments
-    
+
     if selected_webui == 'ComfyUI':
         latest_extensions_widget.layout.display = 'none'
         latest_extensions_widget.value = False
@@ -250,13 +250,14 @@ def update_empowerment(change, widget):
         ADetailer_url_widget
     ]
 
+    # idk why, but that's the way it's supposed to be >_<'
     if selected_emp:
         for wg in customDL_widgets:
             wg.layout.display = 'none'
-        empowerment_output_widget.layout.display = 'inline-block'
+        empowerment_output_widget.layout.display = ''
     else:
         for wg in customDL_widgets:
-            wg.layout.display = ''    # idk why, but that's the way it's supposed to be >_<'
+            wg.layout.display = ''
         empowerment_output_widget.layout.display = 'none'
 
 # Connecting widgets
