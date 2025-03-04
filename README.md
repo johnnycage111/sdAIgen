@@ -65,8 +65,8 @@ English | [Русский](README.ru-ru.md)
 
 </details>
 
-## 🚧 FAQ:
-- [Old information](https://rentry.co/anxety-sdw-faq-en)
+## 🚧 FAQ?:
+- [Rentry Page](https://rentry.co/faq-sdAIgen-en)
 
 <div align="center">
 	<h6>Some scripts are taken from <a href="https://github.com/gutris1">gutris1</a>.</h6>

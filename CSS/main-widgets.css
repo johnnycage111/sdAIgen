@@ -9,6 +9,7 @@
     --aw-font-family-secondary: "Tiny5", sans-serif;
     --aw-color-text-primary: #f0f8ff;
     --aw-text-size: 14px;
+    --aw-text-size-small: 13px;
 
     /* Container */
     --aw-container-bg: #232323;
@@ -37,7 +38,7 @@
     --aw-popup-sample-border: 2px solid rgba(255, 255, 255, 0.2);
   
     /* Term Colors (Popup) */
-    --aw-term-sample-label: dbafff;
+    --aw-term-sample-label: #dbafff;
     --aw-term-braces: #ffff00;
     --aw-term-extension: #eb934b;
     --aw-term-filename: #ffdba7;
@@ -84,34 +85,36 @@ a {
 /* Special Styles */
 
 ::selection {
-  background: #3d4142;
+    background: #3d4142;
 }
 ::-moz-selection { /* Code for Firefox */
-  background: #3d4142;
+    background: #3d4142;
 }
 
 /* === ScrollBar (For TextArea) === */
 .widget-textarea textarea::-webkit-scrollbar {
-  width: var(--aw-scrollbar-width);
-  height: var(--aw-scrollbar-width);
+    width: var(--aw-scrollbar-width);
+    height: var(--aw-scrollbar-width);
 }
 .widget-textarea textarea::-webkit-scrollbar-thumb {
-  background: var(--aw-scrollbar-thumb-bg) !important;
-  border-radius: 16px;
-  border: 3px solid var(--aw-scrollbar-track-bg);
+    background: var(--aw-scrollbar-thumb-bg) !important;
+    border-radius: 16px;
+    border: 3px solid var(--aw-scrollbar-track-bg);
 }
 .widget-textarea textarea::-webkit-scrollbar-thumb:hover {
-  background: var(--aw-scrollbar-thumb-hover) !important;
+    background: var(--aw-scrollbar-thumb-hover) !important;
 }
 .widget-textarea textarea::-webkit-scrollbar-track,
 .widget-textarea textarea::-webkit-scrollbar-corner {
-  background: var(--aw-scrollbar-track-bg) !important;
-  border-radius: 0 8px 8px 0;
+    background: var(--aw-scrollbar-track-bg) !important;
+    border-radius: 0 8px 8px 0;
 }
 /* FireFox Styles */
-.widget-textarea textarea {
-  scrollbar-width: auto;
-  scrollbar-color: var(--aw-scrollbar-thumb-bg) var(--aw-scrollbar-track-bg);
+@-moz-document url-prefix() {
+    .widget-textarea textarea {
+        scrollbar-width: auto;
+        scrollbar-color: var(--aw-scrollbar-thumb-bg) var(--aw-scrollbar-track-bg);
+    }
 }
 
 
@@ -151,6 +154,12 @@ a {
 .widget-text input[type="text"]::placeholder {
     color: grey;
     font-size: var(--aw-text-size);
+}
+
+/* TextArea */
+.widget-textarea textarea,
+.widget-textarea textarea::placeholder {
+    font-size: var(--aw-text-size-small);
 }
 
 
@@ -217,7 +226,7 @@ a {
 .widget-text input[type="text"]:focus,
 .widget-textarea textarea:focus {
     border-color: var(--aw-input-border-focus);
-    font-size: var(--aw-text-size);
+    /* font-size: var(--aw-text-size); */
 }
 
 .widget-dropdown select:hover,
