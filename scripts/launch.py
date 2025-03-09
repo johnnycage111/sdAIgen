@@ -56,7 +56,7 @@ locals().update(settings)
 ## ======================= Other =========================
 
 def Trashing():
-    dirs = ["A1111", "ReForge", "ComfyUI", "Forge"]
+    dirs = ["A1111", "ComfyUI", "Forge", "ReForge", "SD-UX"]
     paths = [Path(HOME) / name for name in dirs]
 
     for path in paths:
@@ -85,14 +85,14 @@ def get_launch_command(tunnel_port):
     base_args = commandline_arguments
     password = 'ha4ez7147b5vdlu5u8f8flrllgn61kpbgbh6emil'
 
-    if UI == 'ComfyUI':
-        return f'{py} main.py {base_args}'
-
     common_args = ' --enable-insecure-extension-access --disable-console-progressbars --theme dark --share'
     if ENV_NAME == "Kaggle":
         common_args += f' --encrypt-pass={password}'
 
-    return f'{py} launch.py {base_args}{common_args}'
+    if UI == 'ComfyUI':
+        return f'{py} main.py {base_args}'
+    else:
+        return f'COMMANDLINE_ARGS="{base_args}{common_args}" REQS_FILE="requirements_versions.txt" {py} launch.py'
 
 ## ===================== Tunneling =======================
 
@@ -150,7 +150,6 @@ class TunnelManager:
                 "pattern": re.compile(r"[\w-]+\.loca\.lt"),
                 "note": f"Password: \033[32m{self.public_ip}\033[0m"
             }),
-            # Testing Tunnels
             ('https://serveo.net', 'Serveo', {
                 "command": f"ssh -o StrictHostKeyChecking=no -R 80:localhost:{self.tunnel_port} serveo.net",
                 "pattern": re.compile(r"[\w-]+\.serveo\.net")

@@ -24,6 +24,7 @@
   - Предустановленные пользовательские настройки + стили.
   - Скачивание превью для *моделей, LoRa и embedding* (CivitAi) | ***Для Kaggle есть ограничения.***
   - Выбор WebUI между *A1111*, *ComfyUI*, *Forge*, *ReForge*, *SD-UX.*
+  - [Rentry Page](https://rentry.co/faq-sdAIgen-ru) - описание виджетов.
 
 <details>
 <summary>Установленные Расширения</summary>
@@ -65,8 +66,13 @@
 
 </details>
 
-## 🚧 FAQ?:
-- [Rentry Page](https://rentry.co/faq-sdAIgen-ru)
+## Поддержать 💙
+
+<div align="center">
+    <a href="https://www.donationalerts.com/r/anxety">
+        <img src=".Docs/SVG/DA_Logo_Color.svg" width="250" height="100" alt="DonationAlerts">
+    </a>
+</div>
 
 <div align="center">
 	<h6>Некоторые скрипты взяты у <a href="https://github.com/gutris1">gutris1</a>.</h6>

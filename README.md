@@ -24,6 +24,7 @@ English | [Русский](README.ru-ru.md)
   - Preset custom settings + styles.
   - Download previews for *models, LoRa and embedding* (CivitAi) | ***There are limitations for Kaggle.***
   - Choosing WebUI between *A1111*, *ComfyUI*, *Forge*, *ReForge*, *SD-UX.*
+  - [Rentry Page](https://rentry.co/faq-sdAIgen-en) - widget description.
 
 <details>
 <summary>Installed Extensions</summary>
@@ -65,8 +66,13 @@ English | [Русский](README.ru-ru.md)
 
 </details>
 
-## 🚧 FAQ?:
-- [Rentry Page](https://rentry.co/faq-sdAIgen-en)
+## Support 💙
+
+<div align="center">
+    <a href="https://www.donationalerts.com/r/anxety">
+        <img src=".Docs/SVG/DA_Logo_Color.svg" width="250" height="100" alt="DonationAlerts">
+    </a>
+</div>
 
 <div align="center">
 	<h6>Some scripts are taken from <a href="https://github.com/gutris1">gutris1</a>.</h6>
