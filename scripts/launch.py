@@ -48,7 +48,7 @@ def load_settings(path):
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error loading settings: {e}")
         return {}
-        
+
 # Load settings
 settings = load_settings(SETTINGS_PATH)
 locals().update(settings)
@@ -92,13 +92,14 @@ def get_launch_command(tunnel_port):
     if UI == 'ComfyUI':
         return f'{py} main.py {base_args}'
     else:
-        return f'COMMANDLINE_ARGS="{base_args}{common_args}" REQS_FILE="requirements_versions.txt" {py} launch.py'
+        # return f'COMMANDLINE_ARGS="{base_args}{common_args}" REQS_FILE="requirements_versions.txt" {py} launch.py'
+        return f'{py} launch.py {base_args}{common_args}'
 
 ## ===================== Tunneling =======================
 
 class TunnelManager:
     """Class for managing tunnel services"""
-    
+
     def __init__(self, tunnel_port):
         self.tunnel_port = tunnel_port
         self.tunnels = []
@@ -111,7 +112,7 @@ class TunnelManager:
         cached_ip = js.read(SETTINGS_PATH, 'ENVIRONMENT.public_ip')
         if cached_ip:
             return cached_ip
-        
+
         try:
             response = requests.get('https://api64.ipify.org?format=json&ipv4=true', timeout=5)
             public_ip = response.json().get('ip', 'N/A')
@@ -159,7 +160,7 @@ class TunnelManager:
         if zrok_token:
             env_path = HOME / '.zrok/environment.json'
             current_token = None
-            
+
             if env_path.exists():
                 with open(env_path, 'r') as f:
                     current_token = json.load(f).get('zrok_token')
@@ -176,7 +177,7 @@ class TunnelManager:
         if ngrok_token:
             config_path = HOME / '.config/ngrok/ngrok.yml'
             current_token = None
-            
+
             if config_path.exists():
                 with open(config_path, 'r') as f:
                     current_token = yaml.safe_load(f).get('agent', {}).get('authtoken')
@@ -210,11 +211,11 @@ if __name__ == "__main__":
     tunnel_port = 8188 if UI == 'ComfyUI' else 7860
     tunnel_mgr = TunnelManager(tunnel_port)
     tunnels, total, success, errors = tunnel_mgr.setup_tunnels()
-    
+
     # Set up tunneling service
     tunnelingService = Tunnel(tunnel_port)
     tunnelingService.logger.setLevel(logging.DEBUG)
-    
+
     for tunnel in tunnels:
         tunnelingService.add_tunnel(**tunnel)
 
@@ -224,7 +225,7 @@ if __name__ == "__main__":
     Trashing()
     _update_config_paths()
     LAUNCHER = get_launch_command(tunnel_port)
-    
+
     # Setup pinggy timer
     ipySys(f'echo -n {int(time.time())+(3600+20)} > {WEBUI}/static/timer-pinggy.txt')
 
@@ -242,10 +243,10 @@ if __name__ == "__main__":
                 subprocess.run(['pip', 'install', '-r', 'requirements.txt'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 js.save(COMFYUI_SETTINGS_PATH, 'install_req', True)
                 clear_output(wait=True)
-        
+
         print(f"\033[34m>> Total Tunnels:\033[0m {total} | \033[32mSuccess:\033[0m {success} | \033[31mErrors:\033[0m {errors}\n")
         print(f"🔧 WebUI: \033[34m{UI}\033[0m")
-        
+
         try:
             ipySys(LAUNCHER)
         except KeyboardInterrupt:

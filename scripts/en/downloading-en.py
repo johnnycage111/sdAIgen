@@ -47,15 +47,13 @@ def install_dependencies(commands):
     for cmd in commands:
         subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def setup_venv():
-    """Customize the virtual environment."""
+def setup_venv(url):
+    """Customize the virtual environment using the specified URL."""
     CD(HOME)
-
-    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python310-venv-torch251-cu121-C-rca.tar.lz4"
     fn = Path(url).name
 
     m_download(f'{url} {HOME} {fn}')
-    
+
     # Install dependencies based on environment
     install_commands = []
     if ENV_NAME == 'Kaggle':
@@ -107,9 +105,33 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
     js.update(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True)
 
 # Check and setup virtual environment
-if not VENV.exists(): 
-    print("♻️ Installing VENV, this will take some time...")
-    setup_venv()
+current_ui = js.read(SETTINGS_PATH, 'WEBUI.current')
+venv_ui_path = SCR_PATH / '.venv_ui'
+
+# Determine whether to reinstall venv
+venv_needs_reinstall = (
+    not VENV.exists()  # venv is missing
+    or not venv_ui_path.exists()  # file marker is missing
+     # Check category change (ReForge <-> other)
+    or (venv_ui_path.read_text().strip() == 'ReForge') != (current_ui == 'ReForge')
+)
+
+if venv_needs_reinstall:
+    if VENV.exists():
+        print("🗑️ Removing old venv...")
+        shutil.rmtree(VENV)
+        clear_output()
+
+    if current_ui == 'ReForge':
+        venv_url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python310-venv-torch251-cu121-C-ReForge.tar.lz4"
+    else:
+        venv_url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python310-venv-torch251-cu121-C-fca.tar.lz4"
+
+    print(f"♻️ Installing {'ReForge VENV' if UI == 'ReForge' else 'VENV'}, this will take some time...")
+    setup_venv(venv_url)
+
+    # Create a marker for the current UI
+    (SCR_PATH / '.venv_ui').write_text(current_ui)
     clear_output()
 
 ## ================ loading settings V5 ==================
@@ -179,7 +201,7 @@ if latest_webui or latest_extensions:
             CD(WEBUI)
             # ipySys('git restore .')
             # ipySys('git pull -X theirs --rebase --autostash')
-            
+
             ipySys('git stash')
             ipySys('git pull --rebase')
             ipySys('git stash pop')
@@ -240,7 +262,7 @@ PREFIX_MAP = {
     "vision": (vision_dir, None),
     "encoder": (encoder_dir, "$enc"),
     "diffusion": (diffusion_dir, "$diff"),
-    "config": (WEBUI, "$cfg")
+    "config": (config_dir, "$cfg")
 }
 for dir_path, _ in PREFIX_MAP.values():
     os.makedirs(dir_path, exist_ok=True)
@@ -353,10 +375,6 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
     format_output(clean_url, dst_dir, file_name, image_url, image_name)
 
     # Downloading
-    # file_path = os.path.join(dst_dir, file_name)
-    # if os.path.exists(file_path) and prefix == 'config':
-    #     os.remove(file_path)
-
     m_download(f"{url} {dst_dir} {file_name or ''}", log=True)
 
 ''' SubModels - Added URLs '''
