@@ -1,4 +1,4 @@
-.# ~ download.py | by ANXETY ~
+# ~ download.py | by ANXETY ~
 
 from webui_utils import handle_setup_timer    # WEBUI
 from CivitaiAPI import CivitAiAPI             # CivitAI API
@@ -95,7 +95,7 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
         ## Tunnels
         "localtunnel": "npm install -g localtunnel",
         "cloudflared": "wget -qO /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64; chmod +x /usr/bin/cl",
-        "zrok": "wget -qO zrok_0.4.44_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v0.4.44/zrok_0.4.44_linux_amd64.tar.gz; tar -xzf zrok_0.4.44_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_0.4.44_linux_amd64.tar.gz",
+        "zrok": "wget -qO zrok_1.0.0_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v1.0.0/zrok_1.0.0_linux_amd64.tar.gz; tar -xzf zrok_1.0.0_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_1.0.0_linux_amd64.tar.gz",
         "ngrok": "wget -qO ngrok-v3-stable-linux-amd64.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz; tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/bin; rm -f ngrok-v3-stable-linux-amd64.tgz"
     }
 
@@ -106,14 +106,13 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
 
 # Check and setup virtual environment
 current_ui = js.read(SETTINGS_PATH, 'WEBUI.current')
-venv_ui_path = SCR_PATH / '.venv_ui'
+latest_ui = js.read(SETTINGS_PATH, 'WEBUI.latest')
 
 # Determine whether to reinstall venv
 venv_needs_reinstall = (
     not VENV.exists()  # venv is missing
-    or not venv_ui_path.exists()  # file marker is missing
-     # Check category change (ReForge <-> other)
-    or (venv_ui_path.read_text().strip() == 'ReForge') != (current_ui == 'ReForge')
+    # Check category change (ReForge <-> other)
+    or (latest_ui == 'ReForge') != (current_ui == 'ReForge')
 )
 
 if venv_needs_reinstall:
@@ -129,9 +128,6 @@ if venv_needs_reinstall:
 
     print(f"♻️ Установка {'ReForge VENV' if UI == 'ReForge' else 'VENV'}, это займет некоторое время...")
     setup_venv(venv_url)
-
-    # Create a marker for the current UI
-    (SCR_PATH / '.venv_ui').write_text(current_ui)
     clear_output()
 
 ## ================ loading settings V5 ==================
@@ -354,14 +350,14 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
     image_url, image_name = None, None
 
     if 'civitai' in url:
-        civitai = CivitAiAPI(civitai_token)
-        if not (data := civitai.fetch_data(url)) or civitai.check_early_access(data):
-            return  # Terminate if no data or requires payment
+        api = CivitAiAPI(civitai_token)
+        if not (data := api.validate_download(url, file_name)):
+            return
 
-        model_type, file_name = civitai.get_model_info(data, url, file_name)
-        download_url = civitai.get_download_url(data, url)
-        clean_url, url = civitai.get_full_and_clean_download_url(download_url)
-        image_url, image_name = civitai.get_image_info(data, file_name, model_type)
+        model_type = data.model_type
+        file_name = data.model_name
+        clean_url, url = data.clean_url, data.download_url
+        image_url, image_name = data.image_url, data.image_name
 
         # Download preview images
         if image_url and image_name:
