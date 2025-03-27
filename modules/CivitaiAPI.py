@@ -49,17 +49,17 @@ class CivitAiAPI:
     Usage Example:
         api = CivitAiAPI()
         result = api.validate_download(
-            url="https://civitai.com/models/...",
-            file_name="model.safetensors"
+            url='https://civitai.com/models/...',
+            file_name='model.safetensors'
         )
     """
     SUPPORTED_TYPES = {'Checkpoint', 'TextualInversion', 'LORA'}
-    BASE_URL = "https://civitai.com/api/v1"
+    BASE_URL = 'https://civitai.com/api/v1'
     is_KAGGLE = os.getenv('KAGGLE_URL_BASE')    # to check NSFW
 
     def __init__(self, token: str = None):
         """Initialize API client with optional authentication token"""
-        self.token = token or "65b66176dcf284b266579de57fbdc024"    # FAKE
+        self.token = token or '65b66176dcf284b266579de57fbdc024'    # FAKE
         self.logger = CivitAiLogger()
 
     def _build_url(self, endpoint: str) -> str:
@@ -69,7 +69,7 @@ class CivitAiAPI:
     def _fetch_json(self, url: str) -> Optional[Dict]:
         """Execute GET request and return parsed JSON response"""
         try:
-            headers = {'Authorization': f'Bearer {self.token}'} if self.token else {}
+            headers = {'Authorization': f"Bearer {self.token}"} if self.token else {}
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             return response.json()
@@ -91,12 +91,12 @@ class CivitAiAPI:
         """Extract model version ID from different URL formats"""
         try:
             # Basic URL format validation
-            if not url.startswith(("http://", "https://")):
+            if not url.startswith(('http://', 'https://')):
                 self.logger.error(f"Invalid URL format: {url}")
                 return None
 
             # Handle model page URLs
-            if "civitai.com/models/" in url:
+            if 'civitai.com/models/' in url:
                 if 'modelVersionId=' in url:
                     version_part = url.split('modelVersionId=')[1]
                     return version_part.split('&')[0].split('#')[0]
@@ -107,11 +107,11 @@ class CivitAiAPI:
                     self.logger.error(f"Invalid model ID format: {model_id}")
                     return None
 
-                model_data = self._fetch_json(self._build_url(f'models/{model_id}'))
+                model_data = self._fetch_json(self._build_url(f"models/{model_id}"))
                 return model_data['modelVersions'][0]['id'] if model_data else None
 
             # Handle direct download URLs
-            if "/api/download/models/" in url:
+            if '/api/download/models/' in url:
                 version_part = url.split('/api/download/models/')[1]
                 return version_part.split('?')[0].split('/')[0]
 
@@ -142,7 +142,7 @@ class CivitAiAPI:
     def _prepare_model_metadata(self, data: Dict, file_name: Optional[str]) -> ModelData:
         """Transform raw API response into structured ModelData"""
         model_type, final_name = self._determine_model_name(
-            data=data, 
+            data=data,
             custom_name=file_name
         )
         clean_url, full_url = self._process_download_url(data['downloadUrl'])
@@ -154,7 +154,7 @@ class CivitAiAPI:
                 model_name=final_name
             )
 
-        early_access = data.get('availability') == 'EarlyAccess' or data.get("earlyAccessEndsAt", None)
+        early_access = data.get('availability') == 'EarlyAccess' or data.get('earlyAccessEndsAt', None)
 
         return ModelData(
             download_url=full_url,
@@ -183,9 +183,9 @@ class CivitAiAPI:
         """Helper method to extract version ID and fetch API data"""
         version_id = self._extract_version_id(url)
         if not version_id:
-            self.logger.error("Invalid model URL")
+            self.logger.error('Invalid model URL')
             return None, None
-        api_data = self._fetch_json(self._build_url(f'model-versions/{version_id}'))
+        api_data = self._fetch_json(self._build_url(f"model-versions/{version_id}"))
         return api_data
 
     # -- Special function for 'sdAIgen' --

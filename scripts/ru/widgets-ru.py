@@ -32,20 +32,20 @@ def read_model_data(file_path, data_type):
     with open(file_path) as f:
         exec(f.read(), {}, local_vars)
 
-    if data_type == "model":
+    if data_type == 'model':
         model_names = list(local_vars['model_list'].keys())   # Return model names
         return ['none'] + model_names
-    elif data_type == "vae":
+    elif data_type == 'vae':
         vae_names = list(local_vars['vae_list'].keys())    # Return the VAE names
         return ['none', 'ALL'] + vae_names
-    elif data_type == "cnet":
+    elif data_type == 'cnet':
         cnet_names = list(local_vars['controlnet_list'].keys())   # Return ControlNet names
         return ['none', 'ALL'] + cnet_names
 
 webui_selection = {
     'A1111':   "--xformers --no-half-vae",
     'ComfyUI': "--dont-print-server --use-pytorch-cross-attention",  # Removed: --preview-method auto
-    'Forge':   "--opt-sdp-attention --cuda-stream --pin-shared-memory",  # Removed: --disable-xformers --cuda-malloc
+    'Forge':   "--disable-xformers --opt-sdp-attention --cuda-stream --pin-shared-memory",
     'ReForge': "--xformers --cuda-stream --pin-shared-memory",
     'SD-UX':   "--xformers --no-half-vae"
 }
@@ -57,7 +57,7 @@ HR = widgets.HTML('<hr>')
 # --- MODEL ---
 """Create model selection widgets."""
 model_header = factory.create_header('Выбор Модели')
-model_options = read_model_data(f'{SCRIPTS}/_models-data.py', 'model')
+model_options = read_model_data(f"{SCRIPTS}/_models-data.py", 'model')
 model_widget = factory.create_dropdown(model_options, 'Модель:', '4. Counterfeit [Anime] [V3] + INP')
 model_num_widget = factory.create_text('Номер Модели:', '', 'Введите номера моделей для скачивания.')
 inpainting_model_widget = factory.create_checkbox('Inpainting Модели', False, class_names=['inpaint'], layout={'width': '25%'})
@@ -68,7 +68,7 @@ switch_model_widget = factory.create_hbox([inpainting_model_widget, XL_models_wi
 # --- VAE ---
 """Create VAE selection widgets."""
 vae_header = factory.create_header('Выбор VAE')
-vae_options = read_model_data(f'{SCRIPTS}/_models-data.py', 'vae')
+vae_options = read_model_data(f"{SCRIPTS}/_models-data.py", 'vae')
 vae_widget = factory.create_dropdown(vae_options, 'Vae:', '3. Blessed2.vae')
 vae_num_widget = factory.create_text('Номер Vae:', '', 'Введите номера vae для скачивания.')
 
@@ -91,7 +91,7 @@ choose_changes_widget = factory.create_hbox(
     layout={'justify_content': 'space-between'}
 )
 
-controlnet_options = read_model_data(f'{SCRIPTS}/_models-data.py', 'cnet')
+controlnet_options = read_model_data(f"{SCRIPTS}/_models-data.py", 'cnet')
 controlnet_widget = factory.create_dropdown(controlnet_options, 'ControlNet:', 'none')
 controlnet_num_widget = factory.create_text('Номер ControlNet:', '', 'Введите номера моделей ControlNet для скачивания.')
 commit_hash_widget = factory.create_text('Commit Hash:', '', 'Переключение между ветвями или коммитами.')
@@ -99,14 +99,20 @@ civitai_token_widget = factory.create_text('Токен CivitAI:', '', 'Введ�
 huggingface_token_widget = factory.create_text('Токен HuggingFace:')
 
 ngrok_token_widget = factory.create_text('Токен Ngrok:')
-ngrok_button = factory.create_html('<a href="https://dashboard.ngrok.com/get-started/your-authtoken" target="_blank">Получить Ngrok Токен</a>', class_names=["button", "button_zrok"])
+ngrok_button = factory.create_html('<a href="https://dashboard.ngrok.com/get-started/your-authtoken" target="_blank">Получить Ngrok Токен</a>', class_names=['button', 'button_zrok'])
 ngrok_widget = factory.create_hbox([ngrok_token_widget, ngrok_button])
 
 zrok_token_widget = factory.create_text('Токен Zrok:')
-zrok_button = factory.create_html('<a href="https://colab.research.google.com/drive/1d2sjWDJi_GYBUavrHSuQyHTDuLy36WpU" target="_blank">Зарегать Zrok Токен</a>', class_names=["button", "button_zrok"])
+zrok_button = factory.create_html('<a href="https://colab.research.google.com/drive/1d2sjWDJi_GYBUavrHSuQyHTDuLy36WpU" target="_blank">Зарегать Zrok Токен</a>', class_names=['button', 'button_zrok'])
 zrok_widget = factory.create_hbox([zrok_token_widget, zrok_button])
 
 commandline_arguments_widget = factory.create_text('Аргументы:', webui_selection['A1111'])
+
+accent_colors_options = ['anxety', 'blue', 'green', 'peach', 'pink', 'red', 'yellow']
+theme_accent_widget = factory.create_dropdown(accent_colors_options, 'Акцент Темы:', 'anxety',
+                                              layout={'width': 'auto', 'margin': '0 0 0 8px'})    # margin-left
+
+additional_footer = factory.create_hbox([commandline_arguments_widget, theme_accent_widget])
 
 additional_widget_list = [
     additional_header,
@@ -116,7 +122,8 @@ additional_widget_list = [
     commit_hash_widget,
     civitai_token_widget, huggingface_token_widget, zrok_widget, ngrok_widget,
     HR,
-    commandline_arguments_widget
+    # commandline_arguments_widget,
+    additional_footer
 ]
 
 # --- CUSTOM DOWNLOAD ---
@@ -162,7 +169,7 @@ custom_file_urls_widget = factory.create_text('Файл (txt):')
 
 # --- Save Button ---
 """Create button widgets."""
-save_button = factory.create_button('Сохранить', class_names=["button", "button_save"])
+save_button = factory.create_button('Сохранить', class_names=['button', 'button_save'])
 
 ## ================== DISPLAY / SETTINGS =================
 
@@ -187,13 +194,13 @@ custom_download_widgets = [
 ]
 
 # Create Boxes
-model_box = factory.create_vbox(model_widgets, class_names=["container"])
-vae_box = factory.create_vbox(vae_widgets, class_names=["container"])
-additional_box = factory.create_vbox(additional_widgets, class_names=["container"])
-custom_download_box = factory.create_vbox(custom_download_widgets, class_names=["container", "container_cdl"])
+model_box = factory.create_vbox(model_widgets, class_names=['container'])
+vae_box = factory.create_vbox(vae_widgets, class_names=['container'])
+additional_box = factory.create_vbox(additional_widgets, class_names=['container'])
+custom_download_box = factory.create_vbox(custom_download_widgets, class_names=['container', 'container_cdl'])
 
 WIDGET_LIST = factory.create_vbox([model_box, vae_box, additional_box, custom_download_box, save_button],
-                                  class_names=["mainContainer"])
+                                  class_names=['mainContainer'])
 factory.display(WIDGET_LIST)
 
 ## ================== CALLBACK FUNCTION ==================
@@ -213,9 +220,9 @@ def update_XL_options(change, widget):
 
     # Get data - MODELs | VAEs | CNETs
     data_file = '_xl-models-data.py' if selected else '_models-data.py'
-    model_widget.options = read_model_data(f'{SCRIPTS}/{data_file}', 'model')
-    vae_widget.options = read_model_data(f'{SCRIPTS}/{data_file}', 'vae')
-    controlnet_widget.options = read_model_data(f'{SCRIPTS}/{data_file}', 'cnet')
+    model_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'model')
+    vae_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'vae')
+    controlnet_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'cnet')
 
     # Set default values from the dictionary
     model_widget.value, vae_widget.value, controlnet_widget.value = default_model_values[selected]
@@ -223,18 +230,22 @@ def update_XL_options(change, widget):
 # Callback functions for updating widgets
 def update_change_webui(change, widget):
     selected_webui = change['new']
-    commandline_arguments = webui_selection.get(selected_webui, "")
+    commandline_arguments = webui_selection.get(selected_webui, '')
     commandline_arguments_widget.value = commandline_arguments
 
     if selected_webui == 'ComfyUI':
         latest_extensions_widget.layout.display = 'none'
         latest_extensions_widget.value = False
-        check_custom_nodes_deps_widget.layout.display = 'inline-block'
+        check_custom_nodes_deps_widget.layout.display = ''
+        theme_accent_widget.layout.display = 'none'
+        theme_accent_widget.value = 'anxety'
         Extensions_url_widget.description = 'Custom Nodes:'
     else:
-        latest_extensions_widget.layout.display = 'inline-block'
+        latest_extensions_widget.layout.display = ''
         latest_extensions_widget.value = True
         check_custom_nodes_deps_widget.layout.display = 'none'
+        theme_accent_widget.layout.display = ''
+        theme_accent_widget.value = 'anxety'
         Extensions_url_widget.description = 'Extensions:'
 
 # Callback functions for Empowerment
@@ -243,7 +254,7 @@ def update_empowerment(change, widget):
 
     customDL_widgets = [
         Model_url_widget,
-        Vae_url_widget, 
+        Vae_url_widget,
         LoRA_url_widget,
         Embedding_url_widget,
         Extensions_url_widget,
@@ -271,7 +282,7 @@ SETTINGS_KEYS = [
       'XL_models', 'model', 'model_num', 'inpainting_model', 'vae', 'vae_num',
       'latest_webui', 'latest_extensions', 'check_custom_nodes_deps', 'change_webui', 'detailed_download',
       'controlnet', 'controlnet_num', 'commit_hash',
-      'civitai_token', 'huggingface_token', 'zrok_token', 'ngrok_token', 'commandline_arguments',
+      'civitai_token', 'huggingface_token', 'zrok_token', 'ngrok_token', 'commandline_arguments', 'theme_accent',
       # CustomDL
       'empowerment', 'empowerment_output',
       'Model_url', 'Vae_url', 'LoRA_url', 'Embedding_url', 'Extensions_url', 'ADetailer_url',
@@ -281,7 +292,7 @@ SETTINGS_KEYS = [
 def save_settings():
     """Save widget values to settings."""
     widgets_values = {key: globals()[f"{key}_widget"].value for key in SETTINGS_KEYS}
-    js.save(SETTINGS_PATH, "WIDGETS", widgets_values)
+    js.save(SETTINGS_PATH, 'WIDGETS', widgets_values)
 
     update_current_webui(change_webui_widget.value)  # Upadte Selected WebUI in setting.json
 
@@ -291,7 +302,7 @@ def load_settings():
         widget_data = js.read(SETTINGS_PATH, 'WIDGETS')
         for key in SETTINGS_KEYS:
             if key in widget_data:
-                globals()[f"{key}_widget"].value = widget_data.get(key, "")
+                globals()[f"{key}_widget"].value = widget_data.get(key, '')
 
 def save_data(button):
     """Handle save button click."""

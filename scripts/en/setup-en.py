@@ -280,7 +280,7 @@ def clear_module_cache(modules_folder):
 def setup_module_folder(scr_folder):
     """Set up the module folder by clearing the cache and adding it to sys.path."""
     clear_module_cache(scr_folder)
-    modules_folder = scr_folder / "modules"
+    modules_folder = scr_folder / 'modules'
     modules_folder.mkdir(parents=True, exist_ok=True)
     if str(modules_folder) not in sys.path:
         sys.path.append(str(modules_folder))
@@ -323,7 +323,7 @@ def create_environment_data(env, scr_folder, lang, branch):
             'install_deps': install_deps,
             'home_path': str(scr_folder.parent),
             'venv_path': str(scr_folder.parent / 'venv'),
-            'scr_path': str(scr_folder), 
+            'scr_path': str(scr_folder),
             'start_timer': start_timer,
             'public_ip': ''
         }
@@ -364,7 +364,7 @@ async def download_files_async(scr_path, lang, branch):
         'modules': ['json_utils.py', 'webui_utils.py', 'widget_factory.py', 'TunnelHub.py', 'CivitaiAPI.py', 'Manager.py'],
         'scripts': {
             'UIs': ['A1111.py', 'ComfyUI.py', 'Forge.py', 'ReForge.py', 'SD-UX.py'],
-            lang: [f'widgets-{lang}.py', f'downloading-{lang}.py'],
+            lang: [f"widgets-{lang}.py", f"downloading-{lang}.py"],
             '': ['launch.py', 'auto-cleaner.py', 'download-result.py', '_models-data.py', '_xl-models-data.py']
         }
     }
@@ -374,7 +374,7 @@ async def download_files_async(scr_path, lang, branch):
     async with aiohttp.ClientSession() as session:
         tasks = [download_file(session, file_url, file_path) for file_url, file_path in file_list]
 
-        for future in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Downloading files", unit="file"):
+        for future in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc='Downloading files', unit='file'):
             await future
 
     clear_output()
@@ -401,5 +401,5 @@ async def main_async():
 
     display_info(env, SCR_PATH, args.branch)   # display info text
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     asyncio.run(main_async())

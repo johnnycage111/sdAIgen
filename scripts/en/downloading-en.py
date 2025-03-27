@@ -47,41 +47,44 @@ def install_dependencies(commands):
     for cmd in commands:
         subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def setup_venv(url):
+def setup_venv():
     """Customize the virtual environment using the specified URL."""
     CD(HOME)
+    url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python31015-venv-torch251-cu121-C-fca.tar.lz4"
     fn = Path(url).name
 
-    m_download(f'{url} {HOME} {fn}')
+    m_download(f"{url} {HOME} {fn}")
 
     # Install dependencies based on environment
     install_commands = []
     if ENV_NAME == 'Kaggle':
         install_commands.extend([
-            "pip install ipywidgets jupyterlab_widgets --upgrade",
-            "rm -f /usr/lib/python3.10/sitecustomize.py"
+            'pip install ipywidgets jupyterlab_widgets --upgrade',
+            'rm -f /usr/lib/python3.10/sitecustomize.py'
         ])
 
-    install_commands.append("sudo apt-get -y install lz4 pv")
+    install_commands.append('sudo apt-get -y install lz4 pv')
     install_dependencies(install_commands)
 
     # Unpack and clean
-    ipySys(f'pv {fn} | lz4 -d | tar xf -')
+    ipySys(f"pv {fn} | lz4 -d | tar xf -")
     Path(fn).unlink()
 
     BIN = str(VENV / 'bin')
     PKG = str(VENV / 'lib/python3.10/site-packages')
 
-    os.environ["PYTHONWARNINGS"] = "ignore"
-    if BIN not in os.environ["PATH"]:
-        os.environ["PATH"] = BIN + ":" + os.environ["PATH"]
-    if PKG not in os.environ["PYTHONPATH"]:
-        os.environ["PYTHONPATH"] = PKG + ":" + os.environ["PYTHONPATH"]
+    os.environ['PYTHONWARNINGS'] = 'ignore'
+
+    sys.path.insert(0, PKG)
+    if BIN not in os.environ['PATH']:
+        os.environ['PATH'] = BIN + ':' + os.environ['PATH']
+    if PKG not in os.environ['PYTHONPATH']:
+        os.environ['PYTHONPATH'] = PKG + ':' + os.environ['PYTHONPATH']
 
 def install_packages(install_lib):
     """Install packages from the provided library dictionary."""
     for index, (package, install_cmd) in enumerate(install_lib.items(), start=1):
-        print(f"\r[{index}/{len(install_lib)}] \033[32m>>\033[0m Installing \033[33m{package}\033[0m..." + " " * 35, end='')
+        print(f"\r[{index}/{len(install_lib)}] \033[32m>>\033[0m Installing \033[33m{package}\033[0m..." + ' ' * 35, end='')
         result = subprocess.run(install_cmd, shell=True, capture_output=True)
         if result.returncode != 0:
             print(f"\n\033[31mError installing {package}: {result.stderr.decode()}\033[0m")
@@ -90,16 +93,16 @@ def install_packages(install_lib):
 if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
     install_lib = {
         ## Libs
-        "aria2": "pip install aria2",
-        "gdown": "pip install gdown",
+        'aria2': "pip install aria2",
+        'gdown': "pip install gdown",
         ## Tunnels
-        "localtunnel": "npm install -g localtunnel",
-        "cloudflared": "wget -qO /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64; chmod +x /usr/bin/cl",
-        "zrok": "wget -qO zrok_1.0.0_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v1.0.0/zrok_1.0.0_linux_amd64.tar.gz; tar -xzf zrok_1.0.0_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_1.0.0_linux_amd64.tar.gz",
-        "ngrok": "wget -qO ngrok-v3-stable-linux-amd64.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz; tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/bin; rm -f ngrok-v3-stable-linux-amd64.tgz"
+        'localtunnel': "npm install -g localtunnel",
+        'cloudflared': "wget -qO /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64; chmod +x /usr/bin/cl",
+        'zrok': "wget -qO zrok_1.0.0_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v1.0.0/zrok_1.0.0_linux_amd64.tar.gz; tar -xzf zrok_1.0.0_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_1.0.0_linux_amd64.tar.gz",
+        'ngrok': "wget -qO ngrok-v3-stable-linux-amd64.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz; tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/bin; rm -f ngrok-v3-stable-linux-amd64.tgz"
     }
 
-    print("💿 Installing the libraries will take a bit of time.")
+    print('💿 Installing the libraries will take a bit of time.')
     install_packages(install_lib)
     clear_output()
     js.update(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True)
@@ -108,29 +111,13 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
 current_ui = js.read(SETTINGS_PATH, 'WEBUI.current')
 latest_ui = js.read(SETTINGS_PATH, 'WEBUI.latest')
 
-# Determine whether to reinstall venv
-venv_needs_reinstall = (
-    not VENV.exists()  # venv is missing
-    # Check category change (ReForge <-> other)
-    or (latest_ui == 'ReForge') != (current_ui == 'ReForge')
-)
-
-if venv_needs_reinstall:
-    if VENV.exists():
-        print("🗑️ Removing old venv...")
-        shutil.rmtree(VENV)
-        clear_output()
-
-    if current_ui == 'ReForge':
-        venv_url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python310-venv-torch251-cu121-C-ReForge.tar.lz4"
-    else:
-        venv_url = "https://huggingface.co/NagisaNao/ANXETY/resolve/main/python310-venv-torch251-cu121-C-fca.tar.lz4"
-
-    print(f"♻️ Installing {'ReForge VENV' if UI == 'ReForge' else 'VENV'}, this will take some time...")
-    setup_venv(venv_url)
+if not os.path.exists(VENV):
+    print('♻️ Installing VENV, this will take some time...')
+    setup_venv()
     clear_output()
 
 ## ================ loading settings V5 ==================
+
 def load_settings(path):
     """Load settings from a JSON file."""
     try:
@@ -155,10 +142,10 @@ if UI not in ['ComfyUI', 'Forge', 'ReForge'] and not os.path.exists('/root/.cach
     name_zip = 'hf_cache_adetailer'
     chache_url = 'https://huggingface.co/NagisaNao/ANXETY/resolve/main/hf_chache_adetailer.zip'
 
-    zip_path = f'{HOME}/{name_zip}.zip'
-    m_download(f'{chache_url} {HOME} {name_zip}')
-    ipySys(f'unzip -q -o {zip_path} -d /')
-    ipySys(f'rm -rf {zip_path}')
+    zip_path = f"{HOME}/{name_zip}.zip"
+    m_download(f"{chache_url} {HOME} {name_zip}")
+    ipySys(f"unzip -q -o {zip_path} -d /")
+    ipySys(f"rm -rf {zip_path}")
 
     clear_output()
 
@@ -168,16 +155,16 @@ if not os.path.exists(WEBUI):
     start_install = time.time()
     print(f"⌚ Unpacking Stable Diffusion... | WEBUI: \033[34m{UI}\033[0m", end='')
 
-    ipyRun('run', f'{SCRIPTS}/UIs/{UI}.py')
+    ipyRun('run', f"{SCRIPTS}/UIs/{UI}.py")
     handle_setup_timer(WEBUI, start_timer)		# Setup timer (for timer-extensions)
 
     install_time = time.time() - start_install
     minutes, seconds = divmod(int(install_time), 60)
-    print(f"\r🚀 Unpacking \033[34m{UI}\033[0m is complete! {minutes:02}:{seconds:02} ⚡" + " "*25)
+    print(f"\r🚀 Unpacking \033[34m{UI}\033[0m is complete! {minutes:02}:{seconds:02} ⚡" + ' '*25)
 
 else:
     print(f"🔧 Current WebUI: \033[34m{UI}\033[0m")
-    print("🚀 Unpacking is complete. Pass. ⚡")
+    print('🚀 Unpacking is complete. Pass. ⚡')
 
     timer_env = handle_setup_timer(WEBUI, start_timer)
     elapsed_time = str(timedelta(seconds=time.time() - timer_env)).split('.')[0]
@@ -186,7 +173,7 @@ else:
 
 ## Changes extensions and WebUi
 if latest_webui or latest_extensions:
-    action = "WebUI and Extensions" if latest_webui and latest_extensions else ("WebUI" if latest_webui else "Extensions")
+    action = 'WebUI and Extensions' if latest_webui and latest_extensions else ('WebUI' if latest_webui else 'Extensions')
     print(f"⌚️ Update {action}...", end='')
     with capture.capture_output():
         ipySys('git config --global user.email "you@example.com"')
@@ -198,15 +185,15 @@ if latest_webui or latest_extensions:
             # ipySys('git restore .')
             # ipySys('git pull -X theirs --rebase --autostash')
 
-            ipySys('git stash')
+            ipySys('git stash push --include-untracked')
             ipySys('git pull --rebase')
             ipySys('git stash pop')
 
         ## Update extensions
         if latest_extensions:
-            # ipySys('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\"$dir\\" && git reset --hard && git pull; done\'}')
-            for entry in os.listdir(f'{WEBUI}/extensions'):
-                dir_path = f'{WEBUI}/extensions/{entry}'
+            # ipySys('{\'for dir in \' + WEBUI + \'/extensions/*/; do cd \\'$dir\\' && git reset --hard && git pull; done\'}')
+            for entry in os.listdir(f"{WEBUI}/extensions"):
+                dir_path = f"{WEBUI}/extensions/{entry}"
                 if os.path.isdir(dir_path):
                     subprocess.run(['git', 'reset', '--hard'], cwd=dir_path, check=True)
                     subprocess.run(['git', 'pull'], cwd=dir_path, check=True)
@@ -222,7 +209,7 @@ with capture.capture_output():
 
 ## Version switching
 if commit_hash:
-    print('🔄 Switching to the specified version...', end="")
+    print('🔄 Switching to the specified version...', end='')
     with capture.capture_output():
         CD(WEBUI)
         ipySys('git config --global user.email "you@example.com"')
@@ -235,30 +222,30 @@ if commit_hash:
 # Get XL or 1.5 models list
 ## model_list | vae_list | controlnet_list
 model_files = '_xl-models-data.py' if XL_models else '_models-data.py'
-with open(f'{SCRIPTS}/{model_files}') as f:
+with open(f"{SCRIPTS}/{model_files}") as f:
     exec(f.read())
 
 ## Downloading model and stuff | oh~ Hey! If you're freaked out by that code too, don't worry, me too!
-print("📦 Downloading models and stuff...", end='')
+print('📦 Downloading models and stuff...', end='')
 
 extension_repo = []
 PREFIX_MAP = {
     # prefix : (dir_path , short-tag)
-    "model": (model_dir, "$ckpt"),
-    "vae": (vae_dir, None),
-    "lora": (lora_dir, None),
-    "embed": (embed_dir, "$emb"),
-    "extension": (extension_dir, "$ext"),
-    "adetailer": (adetailer_dir, "$ad"),
-    "control": (control_dir, "$cnet"),
-    "upscale": (upscale_dir, "$ups"),
+    'model': (model_dir, '$ckpt'),
+    'vae': (vae_dir, None),
+    'lora': (lora_dir, None),
+    'embed': (embed_dir, '$emb'),
+    'extension': (extension_dir, '$ext'),
+    'adetailer': (adetailer_dir, '$ad'),
+    'control': (control_dir, '$cnet'),
+    'upscale': (upscale_dir, '$ups'),
     # Other
-    "clip": (clip_dir, None),
-    "unet": (unet_dir, None),
-    "vision": (vision_dir, None),
-    "encoder": (encoder_dir, "$enc"),
-    "diffusion": (diffusion_dir, "$diff"),
-    "config": (config_dir, "$cfg")
+    'clip': (clip_dir, None),
+    'unet': (unet_dir, None),
+    'vision': (vision_dir, None),
+    'encoder': (encoder_dir, '$enc'),
+    'diffusion': (diffusion_dir, '$diff'),
+    'config': (config_dir, '$cfg')
 }
 for dir_path, _ in PREFIX_MAP.values():
     os.makedirs(dir_path, exist_ok=True)
@@ -270,11 +257,11 @@ def _center_text(text, terminal_width=45):
     return f"{' ' * padding}{text}{' ' * padding}"
 
 def format_output(url, dst_dir, file_name, image_url=None, image_name=None):
-    info = "[ NONE ]"
+    info = '[NONE]'
     if file_name:
-        info = _center_text(f"[{file_name.split('.')[0]}]")
+        info = _center_text(f"[{file_name.rsplit('.', 1)[0]}]")
     if not file_name and 'drive.google.com' in url:
-      info = _center_text("[ GDrive ]")
+      info = _center_text('[GDrive]')
 
     sep_line = '---' * 20
 
@@ -289,7 +276,7 @@ def format_output(url, dst_dir, file_name, image_url=None, image_name=None):
 ''' Main Download Code '''
 
 def _clean_url(url):
-    if "huggingface.co" in url:
+    if 'huggingface.co' in url:
         return url.replace('/blob/', '/resolve/').split('?')[0]
     if 'github.com' in url:
         return url.replace('/blob/', '/raw/')
@@ -300,7 +287,7 @@ def _extract_filename(url):
         return match.group(1)
 
     parsed = urlparse(url)
-    if any(d in parsed.netloc for d in ["civitai.com", "drive.google.com"]):
+    if any(d in parsed.netloc for d in ['civitai.com', 'drive.google.com']):
         return None
 
     return Path(parsed.path).name
@@ -309,7 +296,7 @@ def _unpack_zips():
     for dir_path, _ in PREFIX_MAP.values():
         for root, _, files in os.walk(dir_path):
             for file in files:
-                if file.endswith(".zip"):
+                if file.endswith('.zip'):
                     zip_path = Path(root) / file
                     extract_path = zip_path.with_suffix('')
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -332,7 +319,7 @@ def download(line):
 
         if prefix:
             dir_path, _ = PREFIX_MAP[prefix]
-            if prefix == "extension":
+            if prefix == 'extension':
                 extension_repo.append((url, filename))
             else:
                 try:
@@ -377,35 +364,47 @@ def manual_download(url, dst_dir, file_name=None, prefix=None):
 
 # Separation of merged numbers
 def _parse_selection_numbers(num_str, max_num):
-    """Split a string of numbers into unique integers."""
+    """Split a string of numbers into unique integers, considering max_num as the upper limit."""
     num_str = num_str.replace(',', ' ').strip()
     unique_numbers = set()
+    max_length = len(str(max_num))
 
-    # Handling space-separated and concatenated numbers
     for part in num_str.split():
-        if part.isdigit():
-            part_int = int(part)
-            if part_int <= max_num:
-                unique_numbers.add(part_int)
+        if not part.isdigit():
+            continue
 
-    # Handle the case where numbers can be written as concatenates
-    for i in range(len(num_str)):
-        for length in range(2, 0, -1):
-            if i + length <= len(num_str):
-                substring = num_str[i:i + length]
+        # Check if the entire part is a valid number
+        part_int = int(part)
+        if part_int <= max_num:
+            unique_numbers.add(part_int)
+            continue  # No need to split further
+
+        # Split the part into valid numbers starting from the longest possible
+        current_position = 0
+        part_len = len(part)
+        while current_position < part_len:
+            found = False
+            # Try lengths from max_length down to 1
+            for length in range(min(max_length, part_len - current_position), 0, -1):
+                substring = part[current_position:current_position + length]
                 if substring.isdigit():
-                    part = int(substring)
-                    if part <= max_num:
-                        unique_numbers.add(part)
+                    num = int(substring)
+                    if num <= max_num and num != 0:
+                        unique_numbers.add(num)
+                        current_position += length
+                        found = True
                         break
+            if not found:
+                # Move to the next character if no valid number found
+                current_position += 1
 
     return sorted(unique_numbers)
 
 def handle_submodels(selection, num_selection, model_dict, dst_dir, base_url):
     selected_models = []
 
-    if selection != "none":
-        if selection == "ALL":
+    if selection != 'none':
+        if selection == 'ALL':
             selected_models = sum(model_dict.values(), [])
         else:
             if selection in model_dict:
@@ -428,13 +427,13 @@ def handle_submodels(selection, num_selection, model_dict, dst_dir, base_url):
 
     # Filter inpainting
     for model in unique_models.values():
-        if not inpainting_model and "inpainting" in model['name']:
+        if not inpainting_model and 'inpainting' in model['name']:
             continue
         base_url += f"{model['url']} {model['dst_dir']} {model['name']}, "
 
     return base_url
 
-line = ""
+line = ''
 line = handle_submodels(model, model_num, model_list, model_dir, line)
 line = handle_submodels(vae, vae_num, vae_list, vae_dir, line)
 line = handle_submodels(controlnet, controlnet_num, controlnet_list, control_dir, line)
@@ -444,19 +443,19 @@ line = handle_submodels(controlnet, controlnet_num, controlnet_list, control_dir
 def _process_lines(lines):
     current_tag = None
     unique_urls = set()
-    files_urls = ""
+    files_urls = ''
 
     for line in lines:
         tag_line = line.strip().lower()
         for prefix, (_, short_tag) in PREFIX_MAP.items():
-            if (f'# {prefix}'.lower() in tag_line) or (short_tag and short_tag.lower() in tag_line):
+            if (f"# {prefix}".lower() in tag_line) or (short_tag and short_tag.lower() in tag_line):
                 current_tag = prefix
                 break
 
         for url_part in [u.split('#')[0].strip() for u in line.split(',')]:
             filter_url = url_part.split('[')[0].strip()
             if current_tag is not None:
-                if url_part.startswith("http") and filter_url not in unique_urls:
+                if url_part.startswith('http') and filter_url not in unique_urls:
                     files_urls += f"{current_tag}:{url_part}, "
                     unique_urls.add(filter_url)
 
@@ -470,7 +469,7 @@ def process_file_downloads(file_urls, additional_lines=None):
     lines = additional_lines.splitlines() if additional_lines else []
 
     for source in file_urls:
-        if source.startswith("http"):
+        if source.startswith('http'):
             lines += requests.get(_clean_url(source)).text.splitlines()
         else:
             try:
@@ -487,24 +486,24 @@ file_urls = [f"{f}.txt" if not f.endswith('.txt') else f for f in custom_file_ur
 
 # p -> prefix ; u -> url | Remember: don't touch the prefix!
 prefixed_urls = [f"{p}:{u}" for p, u in zip(PREFIX_MAP, urls_sources) if u for u in u.replace(',', '').split()]
-line += ", ".join(prefixed_urls + [process_file_downloads(file_urls, empowerment_output)])
+line += ', '.join(prefixed_urls + [process_file_downloads(file_urls, empowerment_output)])
 
-if detailed_download == "on":
-    print("\n\n\033[33m# ====== Detailed Download ====== #\n\033[0m")
+if detailed_download == 'on':
+    print('\n\n\033[33m# ====== Detailed Download ====== #\n\033[0m')
     download(line)
-    print("\n\033[33m# =============================== #\n\033[0m")
+    print('\n\033[33m# =============================== #\n\033[0m')
 else:
     with capture.capture_output():
         download(line)
 
-print("\r🏁 Download Complete!" + " "*15)
+print('\r🏁 Download Complete!' + ' '*15)
 
 
 ## Install of Custom extensions
 def _clone_repository(repo, repo_name, extension_dir):
     """Clones the repository to the specified directory."""
     repo_name = repo_name or repo.split('/')[-1]
-    command = f'cd {extension_dir} && git clone --depth 1 --recursive {repo} {repo_name} && cd {repo_name} && git fetch'
+    command = f"cd {extension_dir} && git clone --depth 1 --recursive {repo} {repo_name} && cd {repo_name} && git fetch"
     ipySys(command)
 
 extension_type = 'nodes' if UI == 'ComfyUI' else 'extensions'
@@ -538,4 +537,4 @@ if UI == 'ComfyUI':
 
 
 ## List Models and stuff
-ipyRun('run', f'{SCRIPTS}/download-result.py')
+ipyRun('run', f"{SCRIPTS}/download-result.py")

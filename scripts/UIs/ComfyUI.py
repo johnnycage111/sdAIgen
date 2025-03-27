@@ -38,7 +38,7 @@ async def _download_file(url, directory, filename):
     os.makedirs(directory, exist_ok=True)
     file_path = os.path.join(directory, filename)
     process = await asyncio.create_subprocess_shell(
-        f'curl -sLo {file_path} {url}',
+        f"curl -sLo {file_path} {url}",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
@@ -56,30 +56,30 @@ async def download_files(file_list):
 
 async def download_configuration():
     ## FILES
-    url_cfg = f'https://raw.githubusercontent.com/anxety-solo/sdAIgen/{BRANCH}/__configs__'
+    url_cfg = f"https://raw.githubusercontent.com/anxety-solo/sdAIgen/{BRANCH}/__configs__"
     files = [
         # settings
-        f'{url_cfg}/{UI}/install-deps.py',
-        f'{url_cfg}/{UI}/comfy.settings.json, {WEBUI}/user/default',                         # ComfyUI settings
-        f'{url_cfg}/{UI}/Comfy-Manager/config.ini, {WEBUI}/user/default/ComfyUI-Manager',    # ComfyUI-Manager settings
+        f"{url_cfg}/{UI}/install-deps.py",
+        f"{url_cfg}/{UI}/comfy.settings.json, {WEBUI}/user/default",                         # ComfyUI settings
+        f"{url_cfg}/{UI}/Comfy-Manager/config.ini, {WEBUI}/user/default/ComfyUI-Manager",    # ComfyUI-Manager settings
         # workflows
-        f'{url_cfg}/{UI}/workflows/anxety-workflow.json, {WEBUI}/user/default/workflows'
+        f"{url_cfg}/{UI}/workflows/anxety-workflow.json, {WEBUI}/user/default/workflows"
     ]
     await download_files(files)
 
     ## REPOS
     extensions_list = [
-        "https://github.com/Fannovel16/comfyui_controlnet_aux",
-        "https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet",
-        "https://github.com/hayden-fr/ComfyUI-Model-Manager",
-        "https://github.com/jags111/efficiency-nodes-comfyui",
-        "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
-        "https://github.com/ltdrdata/ComfyUI-Impact-Subpack",
-        "https://github.com/ltdrdata/ComfyUI-Manager",
-        "https://github.com/pythongosssss/ComfyUI-Custom-Scripts",
-        "https://github.com/pythongosssss/ComfyUI-WD14-Tagger",
-        "https://github.com/ssitu/ComfyUI_UltimateSDUpscale",
-        "https://github.com/WASasquatch/was-node-suite-comfyui"
+        'https://github.com/Fannovel16/comfyui_controlnet_aux',
+        'https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet',
+        'https://github.com/hayden-fr/ComfyUI-Model-Manager',
+        'https://github.com/jags111/efficiency-nodes-comfyui',
+        'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+        'https://github.com/ltdrdata/ComfyUI-Impact-Subpack',
+        'https://github.com/ltdrdata/ComfyUI-Manager',
+        'https://github.com/pythongosssss/ComfyUI-Custom-Scripts',
+        'https://github.com/pythongosssss/ComfyUI-WD14-Tagger',
+        'https://github.com/ssitu/ComfyUI_UltimateSDUpscale',
+        'https://github.com/WASasquatch/was-node-suite-comfyui'
     ]
     os.makedirs(EXTS, exist_ok=True)
     CD(EXTS)
@@ -87,7 +87,7 @@ async def download_configuration():
     tasks = []
     for command in extensions_list:
         tasks.append(asyncio.create_subprocess_shell(
-            f'git clone --depth 1 --recursive {command}',
+            f"git clone --depth 1 --recursive {command}",
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         ))
@@ -96,12 +96,12 @@ async def download_configuration():
 
 def unpack_webui():
     zip_path = f"{HOME}/{UI}.zip"
-    m_download(f'{REPO_URL} {HOME} {UI}.zip')
-    ipySys(f'unzip -q -o {zip_path} -d {WEBUI}')
-    ipySys(f'rm -rf {zip_path}')
+    m_download(f"{REPO_URL} {HOME} {UI}.zip")
+    ipySys(f"unzip -q -o {zip_path} -d {WEBUI}")
+    ipySys(f"rm -rf {zip_path}")
 
 ## ====================== MAIN CODE ======================
-if __name__ == "__main__":
+if __name__ == '__main__':
     with capture.capture_output():
         unpack_webui()
         asyncio.run(download_configuration())
