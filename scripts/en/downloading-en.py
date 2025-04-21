@@ -45,7 +45,10 @@ WEBUI = js.read(SETTINGS_PATH, 'WEBUI.webui_path')
 def install_dependencies(commands):
     """Run a list of installation commands."""
     for cmd in commands:
-        subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            subprocess.run(shlex.split(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
 def setup_venv():
     """Customize the virtual environment using the specified URL."""
@@ -85,9 +88,12 @@ def install_packages(install_lib):
     """Install packages from the provided library dictionary."""
     for index, (package, install_cmd) in enumerate(install_lib.items(), start=1):
         print(f"\r[{index}/{len(install_lib)}] \033[32m>>\033[0m Installing \033[33m{package}\033[0m..." + ' ' * 35, end='')
-        result = subprocess.run(install_cmd, shell=True, capture_output=True)
-        if result.returncode != 0:
-            print(f"\n\033[31mError installing {package}: {result.stderr.decode()}\033[0m")
+        try:
+            result = subprocess.run(install_cmd, shell=True, capture_output=True)
+            if result.returncode != 0:
+                print(f"\n\033[31mError installing {package}\033[0m")
+        except Exception:
+            pass
 
 # Check and install dependencies
 if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
@@ -98,7 +104,7 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
         ## Tunnels
         'localtunnel': "npm install -g localtunnel",
         'cloudflared': "wget -qO /usr/bin/cl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64; chmod +x /usr/bin/cl",
-        'zrok': "wget -qO zrok_1.0.0_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v1.0.0/zrok_1.0.0_linux_amd64.tar.gz; tar -xzf zrok_1.0.0_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_1.0.0_linux_amd64.tar.gz",
+        'zrok': "wget -qO zrok_1.0.2_linux_amd64.tar.gz https://github.com/openziti/zrok/releases/download/v1.0.2/zrok_1.0.2_linux_amd64.tar.gz; tar -xzf zrok_1.0.2_linux_amd64.tar.gz -C /usr/bin; rm -f zrok_1.0.2_linux_amd64.tar.gz",
         'ngrok': "wget -qO ngrok-v3-stable-linux-amd64.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz; tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/bin; rm -f ngrok-v3-stable-linux-amd64.tgz"
     }
 
@@ -106,10 +112,6 @@ if not js.key_exists(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True):
     install_packages(install_lib)
     clear_output()
     js.update(SETTINGS_PATH, 'ENVIRONMENT.install_deps', True)
-
-# Check and setup virtual environment
-current_ui = js.read(SETTINGS_PATH, 'WEBUI.current')
-latest_ui = js.read(SETTINGS_PATH, 'WEBUI.latest')
 
 if not os.path.exists(VENV):
     print('♻️ Installing VENV, this will take some time...')
