@@ -26,21 +26,24 @@ widgets_js = JS / 'main-widgets.js'
 ## ======================= WIDGETS =======================
 
 def read_model_data(file_path, data_type):
-    """Reads model, VAE, or ControlNet data from the specified file."""
+    """Reads model, VAE, ControlNet or LoRA data from the specified file."""
     local_vars = {}
 
     with open(file_path) as f:
         exec(f.read(), {}, local_vars)
 
     if data_type == 'model':
-        model_names = list(local_vars['model_list'].keys())   # Return model names
+        model_names = list(local_vars.get('model_list', {}).keys())   # Return model names
         return ['none'] + model_names
     elif data_type == 'vae':
-        vae_names = list(local_vars['vae_list'].keys())    # Return the VAE names
+        vae_names = list(local_vars.get('vae_list', {}).keys())    # Return the VAE names
         return ['none', 'ALL'] + vae_names
     elif data_type == 'cnet':
-        cnet_names = list(local_vars['controlnet_list'].keys())   # Return ControlNet names
+        cnet_names = list(local_vars.get('controlnet_list', {}).keys())   # Return ControlNet names
         return ['none', 'ALL'] + cnet_names
+    elif data_type == 'lora':
+        lora_names = list(local_vars.get('lora_list', {}).keys())   # Return LoRA names
+        return ['none', 'ALL'] + lora_names
 
 webui_selection = {
     'A1111':   "--xformers --no-half-vae",
@@ -71,6 +74,13 @@ vae_header = factory.create_header('Выбор VAE')
 vae_options = read_model_data(f"{SCRIPTS}/_models-data.py", 'vae')
 vae_widget = factory.create_dropdown(vae_options, 'Vae:', '3. Blessed2.vae')
 vae_num_widget = factory.create_text('Номер Vae:', '', 'Введите номера vae для скачивания.')
+
+# --- LORA ---
+"""Create LoRA selection widgets."""
+lora_header = factory.create_header('Выбор LoRA')
+lora_options = read_model_data(f"{SCRIPTS}/_models-data.py", 'lora')
+lora_widget = factory.create_dropdown(lora_options, 'LoRA:', 'none')
+lora_num_widget = factory.create_text('Номер LoRA:', '', 'Введите номера LoRA для скачивания.')
 
 # --- ADDITIONAL ---
 """Create additional configuration widgets."""
@@ -206,6 +216,7 @@ factory.load_js(widgets_js)     # load JS (widgets)
 # Display sections
 model_widgets = [model_header, model_widget, model_num_widget, switch_model_widget]
 vae_widgets = [vae_header, vae_widget, vae_num_widget]
+lora_widgets = [lora_header, lora_widget, lora_num_widget]
 additional_widgets = additional_widget_list
 custom_download_widgets = [
     custom_download_header_popup,
@@ -226,10 +237,11 @@ model_content = factory.create_vbox(model_widgets, class_names=['container'])   
 model_box = factory.create_hbox([model_content, GDrive_button])
 
 vae_box = factory.create_vbox(vae_widgets, class_names=['container'])
+lora_box = factory.create_vbox(lora_widgets, class_names=['container'])
 additional_box = factory.create_vbox(additional_widgets, class_names=['container'])
 custom_download_box = factory.create_vbox(custom_download_widgets, class_names=['container', 'container_cdl'])
 
-WIDGET_LIST = factory.create_vbox([model_box, vae_box, additional_box, custom_download_box, save_button],
+WIDGET_LIST = factory.create_vbox([model_box, vae_box, lora_box, additional_box, custom_download_box, save_button],
                                   class_names=['mainContainer'])
 factory.display(WIDGET_LIST)
 
@@ -244,18 +256,19 @@ def update_XL_options(change, widget):
     selected = change['new']
 
     default_model_values = {
-        True: ('4. WAI-illustrious [Anime] [V13] [XL]', 'none', 'none'),           # XL models
-        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none')    # SD 1.5 models
+        True: ('4. WAI-illustrious [Anime] [V13] [XL]', 'none', 'none', 'none'),           # XL models
+        False: ('4. Counterfeit [Anime] [V3] + INP', '3. Blessed2.vae', 'none', 'none')    # SD 1.5 models
     }
 
-    # Get data - MODELs | VAEs | CNETs
+    # Get data - MODELs | VAEs | CNETs | LoRAs
     data_file = '_xl-models-data.py' if selected else '_models-data.py'
     model_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'model')
     vae_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'vae')
     controlnet_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'cnet')
+    lora_widget.options = read_model_data(f"{SCRIPTS}/{data_file}", 'lora')
 
     # Set default values from the dictionary
-    model_widget.value, vae_widget.value, controlnet_widget.value = default_model_values[selected]
+    model_widget.value, vae_widget.value, controlnet_widget.value, lora_widget.value = default_model_values[selected]
 
 # Callback functions for updating widgets
 def update_change_webui(change, widget):
@@ -309,7 +322,7 @@ factory.connect_widgets([(empowerment_widget, 'value')], update_empowerment)
 ## ============== Load / Save - Settings V4 ==============
 
 SETTINGS_KEYS = [
-      'XL_models', 'model', 'model_num', 'inpainting_model', 'vae', 'vae_num',
+      'XL_models', 'model', 'model_num', 'inpainting_model', 'vae', 'vae_num', 'lora', 'lora_num',
       'latest_webui', 'latest_extensions', 'check_custom_nodes_deps', 'change_webui', 'detailed_download',
       'controlnet', 'controlnet_num', 'commit_hash',
       'civitai_token', 'huggingface_token', 'zrok_token', 'ngrok_token', 'commandline_arguments', 'theme_accent',

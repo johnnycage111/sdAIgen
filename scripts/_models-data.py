@@ -1,38 +1,17 @@
 ## MODEL
-
 model_list = {
-    "1. Anime (by XpucT) + INP": [
-        {'url': "https://huggingface.co/XpucT/Anime/resolve/main/Anime_v2.safetensors", 'name': "Anime_V2.safetensors"},
-        {'url': "https://huggingface.co/XpucT/Anime/resolve/main/Anime_v2-inpainting.safetensors", 'name': "Anime_V2-inpainting.safetensors"}
-    ],
-    "2. BluMix [Anime] [V7] + INP": [
-        {'url': "https://civitai.com/api/download/models/361779", 'name': "BluMix_V7.safetensors"},
-        {'url': "https://civitai.com/api/download/models/363850", 'name': "BluMix_V7-inpainting.safetensors"}
-    ],
-    "3. Cetus-Mix [Anime] [V4] + INP": [
-        {'url': "https://huggingface.co/fp16-guy/Cetus-Mix_v4_fp16_cleaned/resolve/main/cetusMix_v4_fp16.safetensors", 'name': "CetusMix_V4.safetensors"},
-        {'url': "https://huggingface.co/fp16-guy/Cetus-Mix_v4_fp16_cleaned/resolve/main/cetusMix_v4_inp_fp16.safetensors", 'name': "CetusMix_V4-inpainting.safetensors"}
-    ],
-    "4. Counterfeit [Anime] [V3] + INP": [
-        {'url': "https://huggingface.co/fp16-guy/Counterfeit-V3.0_fp16_cleaned/resolve/main/CounterfeitV30_v30_fp16.safetensors", 'name': "Counterfeit_V3.safetensors"},
-        {'url': "https://huggingface.co/fp16-guy/Counterfeit-V3.0_fp16_cleaned/resolve/main/CounterfeitV30_v30_inp_fp16.safetensors", 'name': "Counterfeit_V3-inpainting.safetensors"}
-    ],
-    "5. CuteColor [Anime] [V3]": [
-        {'url': "https://civitai.com/api/download/models/138754", 'name': "CuteColor_V3.safetensors"}
-    ],
-    "6. Dark-Sushi-Mix [Anime]": [
-        {'url': "https://civitai.com/api/download/models/141866", 'name': "DarkSushiMix_2_5D.safetensors"},
-        {'url': "https://civitai.com/api/download/models/56071", 'name': "DarkSushiMix_colorful.safetensors"}
-    ],
-    "7. Meina-Mix [Anime] [V12] + INP": [
+    "1. Meina-Mix [Anime] [V12] + INP": [
         {'url': "https://civitai.com/api/download/models/948574", 'name': "MeinaMix_V12.safetensors"}
     ],
-    "8. Mix-Pro [Anime] [V4] + INP": [
+    "2. Mix-Pro [Anime] [V4] + INP": [
         {'url': "https://huggingface.co/fp16-guy/MIX-Pro-V4_fp16_cleaned/resolve/main/mixProV4_v4_fp16.safetensors", 'name': "MixPro_V4.safetensors"},
         {'url': "https://huggingface.co/fp16-guy/MIX-Pro-V4_fp16_cleaned/resolve/main/mixProV4_v4_inp_fp16.safetensors", 'name': "MixPro_V4-inpainting.safetensors"},
         {'url': "https://huggingface.co/fp16-guy/MIX-Pro-V4.5_fp16_cleaned/resolve/main/mixProV45Colorbox_v45_fp16.safetensors", 'name': "MixPro_V4_5.safetensors"},
         {'url': "https://huggingface.co/fp16-guy/MIX-Pro-V4.5_fp16_cleaned/resolve/main/mixProV45Colorbox_v45_inp_fp16.safetensors", 'name': "MixPro_V4_5-inpainting.safetensors"}
-    ]
+    ],
+    "3. Hassaku-XL Illustrious V2.1 FIX": [
+        {'url': "https://civitai.com/api/download/models/140272", 'name': "Hassaku-XL-Illustrious.safetensors"}
+    ],
 }
 
 ## VAE
@@ -81,28 +60,19 @@ controlnet_list = {
         {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_inpaint_fp16.safetensors"},
         {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_inpaint_fp16.yaml"}
     ],
-    "8. MLSD": [
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_mlsd_fp16.safetensors"},
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_mlsd_fp16.yaml"}
-    ],
-    "9. Normalbae": [
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_normalbae_fp16.safetensors"},
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_normalbae_fp16.yaml"}
-    ],
-    "10. Scribble": [
+    "8. Scribble": [
         {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_scribble_fp16.safetensors"},
         {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_scribble_fp16.yaml"}
-    ],
-    "11. Seg": [
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_seg_fp16.safetensors"},
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_seg_fp16.yaml"}
-    ],
-    "12. Softedge": [
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11p_sd15_softedge_fp16.safetensors"},
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11p_sd15_softedge_fp16.yaml"}
-    ],
-    "13. Tile": [
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/resolve/main/control_v11f1e_sd15_tile_fp16.safetensors"},
-        {'url': "https://huggingface.co/ckpt/ControlNet-v1-1/raw/main/control_v11f1e_sd15_tile_fp16.yaml"}
     ]
+}
+
+## LORA
+lora_list = {
+    "1. Detail Tweaker LoRA": [
+        {'url': "https://civitai.com/api/download/models/58390", 'name': "detail_tweaker.safetensors"}
+    ],
+    "2. Add More Details LoRA": [
+        {'url': "https://civitai.com/api/download/models/87153", 'name': "add_more_details.safetensors"}
+    ]
+    # Add more SD 1.5 LoRAs here
 }

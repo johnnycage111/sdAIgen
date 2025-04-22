@@ -91,3 +91,14 @@ controlnet_list = {
         {'url': "https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model_promax.safetensors", 'name': "controlnet-union-sdxl-promax.safetensors"}
     ]
 }
+
+## LORA
+lora_list = {
+    "1. SDXL Offset Noise LoRA": [
+        {'url': "https://civitai.com/api/download/models/130072", 'name': "sdxl_offset_noise.safetensors"}
+    ],
+    "2. SDXL Detail Tweaker LoRA": [
+        {'url': "https://civitai.com/api/download/models/122359", 'name': "detail_tweaker_xl.safetensors"}
+    ]
+    # Add more SDXL LoRAs here
+}
